@@ -1,3 +1,4 @@
 "# Squat-ify" 
 "# Squat-ify" 
-"Davis Owen" 
+"Davis Owen"
+"Andrew Sweet" 
