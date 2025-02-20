@@ -1,4 +1,3 @@
-"# Squat-ify" 
-"# Squat-ify" 
+"Nick Jacquet"
 "Davis Owen"
 "Andrew Sweet" 
