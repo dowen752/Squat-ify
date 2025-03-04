@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "632744217891",
+    "project_id": "comp350experiment",
+    "storage_bucket": "comp350experiment.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:632744217891:android:9346cd492ef0b92aa21096",
+        "android_client_info": {
+          "package_name": "com.example.sprint0nj"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDzW2Qw4-BJYt6G-GOD5WcmjmktRtI8AKQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
