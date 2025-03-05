@@ -30,13 +30,15 @@ fun LibraryScreen() {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF4CAF50))
+            .background(Color(0xFF4CAF50)) // Green background
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        Spacer(modifier = Modifier.height(80.dp)) // Moves title down
+
         Text(
-            text = "Library",
-            fontSize = 18.sp,
+            text = "My Lists", // Updated text
+            fontSize = 26.sp, // Increased font size
             fontWeight = FontWeight.Bold,
             color = Color.White,
             modifier = Modifier.padding(bottom = 16.dp)
@@ -60,14 +62,34 @@ fun LibraryScreen() {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        repeat(5) {
-            Box(
+        val playlists = listOf("Workout", "Upper Body", "Lower Body", "Legs", "Back")
+
+        playlists.forEach { text ->
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(48.dp)
                     .background(Color.White, shape = RoundedCornerShape(8.dp))
-                    .padding(8.dp)
-            )
+                    .padding(horizontal = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Square "Logo"
+                Box(
+                    modifier = Modifier
+                        .size(24.dp) // Square logo size
+                        .background(Color.Gray, shape = RoundedCornerShape(4.dp))
+                )
+
+                Spacer(modifier = Modifier.width(8.dp))
+
+                // Playlist name
+                Text(
+                    text = text,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = Color.Black
+                )
+            }
             Spacer(modifier = Modifier.height(8.dp))
         }
     }
