@@ -1,6 +1,6 @@
 package com.example.sprint0nj.data
 import com.google.firebase.firestore.FirebaseFirestore
-import com.example.sprint0nj.data.Playlists.Playlist
+import com.example.sprint0nj.data.Classes.Playlist
 
 class FirestoreRepository {
 
