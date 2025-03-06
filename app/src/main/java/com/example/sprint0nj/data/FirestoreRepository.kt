@@ -17,6 +17,21 @@ class FirestoreRepository {
                 callback(false, exception.message) // If fails, return error message and false
             }
     }
+    fun fetchPlaylist(playlistId: String, callback: (Playlist?) -> Unit){
+        playlistsCollection.document(playlistId).get()
+            .addOnSuccessListener { document ->
+                if(document.exists()){
+                    val fetchedPlaylist = document.toObject(Playlist::class.java)
+                    callback(fetchedPlaylist)
+                }
+                else{
+                    callback(null)
+                }
+            }
+            .addOnFailureListener {
+                callback(null)
+            }
+    }
 
 
 }
