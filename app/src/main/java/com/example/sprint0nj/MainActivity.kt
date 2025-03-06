@@ -4,10 +4,9 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.*
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -34,63 +33,49 @@ fun LibraryScreen() {
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Spacer(modifier = Modifier.height(80.dp)) // Moves title down
+        Spacer(modifier = Modifier.height(80.dp))
 
         Text(
-            text = "My Lists", // Updated text
-            fontSize = 26.sp, // Increased font size
-            fontWeight = FontWeight.Bold,
+            text = "My Lists",
+            fontSize = 28.sp,
             color = Color.White,
             modifier = Modifier.padding(bottom = 16.dp)
         )
 
-        Box(
+        // Plus Button (Now Fully Centered)
+        Button(
+            onClick = { /* Handle adding a new playlist */ },
             modifier = Modifier
                 .align(Alignment.End)
-                .background(Color.White, shape = RoundedCornerShape(12.dp))
-                .size(48.dp)
-                .clickable { /* Handle click */ },
-            contentAlignment = Alignment.Center
+                .size(56.dp), // Keep size for better visibility
+            shape = RoundedCornerShape(12.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = Color.White),
+            contentPadding = PaddingValues(0.dp) // Removes extra padding inside the button
         ) {
-            Text(
-                text = "+",
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.Black
-            )
+            Box(
+                modifier = Modifier.fillMaxSize(), // Ensures text is centered
+                contentAlignment = Alignment.Center
+            ) {
+                Text("+", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+            }
         }
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        val playlists = listOf("Workout", "Upper Body", "Lower Body", "Legs", "Back")
+        val playlists = listOf("Playlist 1", "Playlist 2", "Playlist 3", "Playlist 4", "Playlist 5")
 
-        playlists.forEach { text ->
-            Row(
+        playlists.forEach { playlistName ->
+            Button(
+                onClick = { /* Handle button click */ },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(48.dp)
-                    .background(Color.White, shape = RoundedCornerShape(8.dp))
-                    .padding(horizontal = 8.dp),
-                verticalAlignment = Alignment.CenterVertically
+                    .padding(vertical = 4.dp),
+                shape = RoundedCornerShape(8.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color.White)
             ) {
-                // Square "Logo"
-                Box(
-                    modifier = Modifier
-                        .size(24.dp) // Square logo size
-                        .background(Color.Gray, shape = RoundedCornerShape(4.dp))
-                )
-
-                Spacer(modifier = Modifier.width(8.dp))
-
-                // Playlist name
-                Text(
-                    text = text,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = Color.Black
-                )
+                Text(text = playlistName, fontSize = 16.sp, color = Color.Black)
             }
-            Spacer(modifier = Modifier.height(8.dp))
         }
     }
 }
