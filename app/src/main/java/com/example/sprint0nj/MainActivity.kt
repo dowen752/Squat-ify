@@ -14,22 +14,21 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.google.firebase.firestore.FirebaseFirestore
+import androidx.navigation.NavGraph
+import androidx.navigation.NavHostController
 
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-
         setContent {
-            LibraryScreen()
+            AppNavHost()  // Show your NavHost here
         }
     }
 }
 
 @Composable
-fun LibraryScreen() {
+fun LibraryScreen(navController: NavHostController) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -45,8 +44,14 @@ fun LibraryScreen() {
             color = Color.White,
             modifier = Modifier.padding(bottom = 16.dp)
         )
+        //TAKES YOU TO HOME SCREEN
+        /*
+        Button(onClick = { navController.navigate("home") }) {
+            Text("Go to Home")
+        }
+        */
 
-        // Plus Button (Now Fully Centered)
+        // Plus Button
         Button(
             onClick = { /* Handle adding a new playlist */ },
             modifier = Modifier
@@ -69,8 +74,10 @@ fun LibraryScreen() {
         val playlists = listOf("Playlist 1", "Playlist 2", "Playlist 3", "Playlist 4", "Playlist 5")
 
         playlists.forEach { playlistName ->
-            Button(
-                onClick = { /* Handle button click */ },
+            Button(      // Navigate to the WorkoutScreen route
+                onClick = {
+                    navController.navigate("workout")
+                          },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(48.dp)
