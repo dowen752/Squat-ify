@@ -14,9 +14,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import androidx.compose.ui.platform.LocalContext
+import android.widget.Toast // "Toast" is an Android API used to display the short confirmation messages after clicking the buttons
+
 
 @Composable
 fun WorkoutScreen(navController: NavController) {
+    // This captures the current context which is used in the callbacks for popup
+    val context = LocalContext.current
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -24,6 +29,9 @@ fun WorkoutScreen(navController: NavController) {
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        // Shifted this down
+        Spacer(modifier = Modifier.height(80.dp))
+
         // Top row with "Playlist #1" and a plus button on the right
         Row(
             modifier = Modifier
@@ -38,14 +46,21 @@ fun WorkoutScreen(navController: NavController) {
                 color = Color.White
             )
 
-            Button(
-                onClick = { /* Add new workout or item */ },
-                shape = RoundedCornerShape(8.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color.White),
-                modifier = Modifier.size(40.dp)
-            ) {
-                Text("+", color = Color.Black, fontSize = 20.sp, fontWeight = FontWeight.Bold)
-            }
+            // Call the reusable plus button
+            PlusButtonWithMenu(
+                menuOptions = listOf(
+                    // First menu option with the title "Add Workout"
+                    // When clicked, a Toast message is displayed
+                    MenuOption("Add Workout") {
+                        Toast.makeText(context, "Add Workout clicked", Toast.LENGTH_SHORT).show()
+                    },
+                    // Second menu option with the title "Import Workout" (probably could use a different title)
+                    // When clicked, a Toast message is displayed
+                    MenuOption("Import Workout") {
+                        Toast.makeText(context, "Import Workout clicked", Toast.LENGTH_SHORT).show()
+                    }
+                )
+            )
         }
 
         // Example list of workouts with #Reps and #Sets

@@ -14,8 +14,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavGraph
 import androidx.navigation.NavHostController
+import android.widget.Toast // "Toast" is an Android API used to display the short confirmation messages after clicking the buttons
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.DpOffset
+
 
 
 class MainActivity : ComponentActivity() {
@@ -29,6 +32,7 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun LibraryScreen(navController: NavHostController) {
+    val context = LocalContext.current
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -51,23 +55,32 @@ fun LibraryScreen(navController: NavHostController) {
         }
         */
 
-        // Plus Button
-        Button(
-            onClick = { /* Handle adding a new playlist */ },
-            modifier = Modifier
-                .align(Alignment.End)
-                .size(56.dp), // Keep size for better visibility
-            shape = RoundedCornerShape(12.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Color.White),
-            contentPadding = PaddingValues(0.dp) // Removes extra padding inside the button
+        // A Box is used as a container that fills the available width
+        // The contentAlignment parameter ensures that the children (the plus button) is positioned at the top-right of the Box
+        // "Toast" is an Android API used to display the short confirmation messages after clicking the buttons
+        Box(
+            modifier = Modifier.fillMaxWidth(),
+            contentAlignment = Alignment.TopEnd
         ) {
-            Box(
-                modifier = Modifier.fillMaxSize(), // Ensures text is centered
-                contentAlignment = Alignment.Center
-            ) {
-                Text("+", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = Color.Black)
-            }
+            // Call the reusable PlusButtonWithMenu composable
+            // List of MenuOption objects is passed to define the menu items
+            PlusButtonWithMenu(
+                menuOptions = listOf(
+                    // First menu option with the title "Add Playlist"
+                    // When clicked, a Toast message is displayed
+                    MenuOption("Add Playlist") {
+                        Toast.makeText(context, "Add Playlist clicked", Toast.LENGTH_SHORT).show()
+                    },
+                    // Second menu option with the title "Import Playlist"
+                    // When clicked, a Toast message is displayed
+                    MenuOption("Import Playlist") {
+                        Toast.makeText(context, "Import Playlist clicked", Toast.LENGTH_SHORT).show()
+                    }
+                )
+            )
+
         }
+
 
         Spacer(modifier = Modifier.height(16.dp))
 
