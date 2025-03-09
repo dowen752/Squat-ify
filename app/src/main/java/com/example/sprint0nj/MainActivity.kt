@@ -20,6 +20,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.DpOffset
 
 
+
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -31,6 +32,7 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun LibraryScreen(navController: NavHostController) {
+    val context = LocalContext.current
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -53,65 +55,31 @@ fun LibraryScreen(navController: NavHostController) {
         }
         */
 
-        // Box container to hold the plus button and its dropdown menu
+        // A Box is used as a container that fills the available width
+        // The contentAlignment parameter ensures that the children (the plus button) is positioned at the top-right of the Box
+        // "Toast" is an Android API used to display the short confirmation messages after clicking the buttons
         Box(
             modifier = Modifier.fillMaxWidth(),
-            contentAlignment = Alignment.TopEnd // Align the content to the top-right corner
+            contentAlignment = Alignment.TopEnd
         ) {
-            // State variable to control whether the dropdown menu is shown
-            var menuExpanded by remember { mutableStateOf(false) }
-            // Get the current context to display Toast messages
-            val context = LocalContext.current
-
-            // The plus button that triggers the dropdown menu
-            Button(
-                onClick = { menuExpanded = true }, // When clicked, open the dropdown menu
-                modifier = Modifier
-                    .size(56.dp), // Fixed size for the button
-                shape = RoundedCornerShape(12.dp), // Rounded corners
-                colors = ButtonDefaults.buttonColors(containerColor = Color.White),
-                contentPadding = PaddingValues(0.dp) // No extra internal padding
-            ) {
-                // Center the "+" text inside the button
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        "+",
-                        fontSize = 28.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.Black
-                    )
-                }
-            }
-
-            // DropdownMenu that appears when the plus button is clicked
-            // DPOffset moves the menu horizontally and vertically
-            DropdownMenu(
-                expanded = menuExpanded,
-                onDismissRequest = { menuExpanded = false },
-                offset = DpOffset(x = (275).dp, y = (5).dp)
-            ) {
-                // "Add Playlist" menu item
-                DropdownMenuItem(
-                    text = { Text("Add Playlist") },
-                    onClick = {
+            // Call the reusable PlusButtonWithMenu composable
+            // List of MenuOption objects is passed to define the menu items
+            PlusButtonWithMenu(
+                menuOptions = listOf(
+                    // First menu option with the title "Add Playlist"
+                    // When clicked, a Toast message is displayed
+                    MenuOption("Add Playlist") {
                         Toast.makeText(context, "Add Playlist clicked", Toast.LENGTH_SHORT).show()
-                        menuExpanded = false // Close the menu after selection
-                    }
-                )
-                // "Import Playlist" menu item.
-                DropdownMenuItem(
-                    text = { Text("Import Playlist") },
-                    onClick = {
+                    },
+                    // Second menu option with the title "Import Playlist"
+                    // When clicked, a Toast message is displayed
+                    MenuOption("Import Playlist") {
                         Toast.makeText(context, "Import Playlist clicked", Toast.LENGTH_SHORT).show()
-                        menuExpanded = false // Close the menu after selection
                     }
                 )
-            }
-        }
+            )
 
+        }
 
 
         Spacer(modifier = Modifier.height(16.dp))
