@@ -24,6 +24,9 @@ fun WorkoutScreen(navController: NavController) {
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        // Shifted this down
+        Spacer(modifier = Modifier.height(80.dp))
+
         // Top row with "Playlist #1" and a plus button on the right
         Row(
             modifier = Modifier
@@ -37,8 +40,8 @@ fun WorkoutScreen(navController: NavController) {
                 fontSize = 24.sp,
                 color = Color.White
             )
-
-            Button(
+            /* */
+            Button( // popup feature
                 onClick = { /* Add new workout or item */ },
                 shape = RoundedCornerShape(8.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Color.White),
@@ -47,6 +50,8 @@ fun WorkoutScreen(navController: NavController) {
                 Text("+", color = Color.Black, fontSize = 20.sp, fontWeight = FontWeight.Bold)
             }
         }
+
+        /* */
 
         // Example list of workouts with #Reps and #Sets
         // In a real app, you might replace this with dynamic data
