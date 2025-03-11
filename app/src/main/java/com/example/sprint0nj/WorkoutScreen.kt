@@ -26,14 +26,14 @@ import com.example.sprint0nj.data.FirestoreRepository
 import com.example.sprint0nj.data.Classes.Playlist
 
 @Composable
-fun WorkoutScreen(navController: NavController) {
+fun WorkoutScreen(navController: NavController, playlistId: String) {
     // This captures the current context which is used in the callbacks for popup
     val context = LocalContext.current
     val firestoreRepository = remember { FirestoreRepository()}
     val scope = rememberCoroutineScope()
     val playlist = remember { mutableStateOf<Playlist?>(null) }
-    LaunchedEffect(Unit) {
-        playlist.value = firestoreRepository.fetchPlaylist("0000")
+    LaunchedEffect(playlistId) {
+        playlist.value = firestoreRepository.fetchPlaylist(playlistId)
     }
 
 
@@ -139,11 +139,4 @@ fun WorkoutScreen(navController: NavController) {
             }
         }
     }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun WorkoutScreenPreview() {
-    val navController = rememberNavController() // Only works if you have Navigation Compose
-    WorkoutScreen(navController = navController)
 }

@@ -53,6 +53,9 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun LibraryScreen(navController: NavHostController) {
     val context = LocalContext.current
+
+
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -109,7 +112,7 @@ fun LibraryScreen(navController: NavHostController) {
         playlists.forEach { playlistName ->
             Button(      // Navigate to the WorkoutScreen route
                 onClick = {
-                    navController.navigate("workout")
+                    navController.navigate("workout/${playlistId}")
                           },
                 modifier = Modifier
                     .fillMaxWidth()
