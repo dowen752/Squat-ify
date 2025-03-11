@@ -42,4 +42,13 @@ class FirestoreRepository {
             emptyList() // Return empty list if there's an error
         }
     }
+    suspend fun fetchPlaylistSummaries(): List<Pair<String, String>> {
+        val playlistNames = playlistsCollection.get().await()
+        return playlistNames.documents.map { document ->
+            val id = document.id
+            val name = document.data?.get("name") as String ?: "Unnamed Playlist"
+            id to name
+        }
+    }
+
 }

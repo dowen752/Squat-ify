@@ -53,8 +53,12 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun LibraryScreen(navController: NavHostController) {
     val context = LocalContext.current
+    val firestoreRepository = remember {FirestoreRepository()}
+    val playlists = remember { mutableStateOf<List<Pair<String, String>>>(emptyList())}
 
-
+    LaunchedEffect(Unit) {
+        playlists.value = firestoreRepository.fetchPlaylistSummaries()
+    }
 
     Column(
         modifier = Modifier
@@ -66,7 +70,7 @@ fun LibraryScreen(navController: NavHostController) {
         Spacer(modifier = Modifier.height(80.dp))
 
         Text(
-            text = "My Lists",
+            text = "My Playlists",
             fontSize = 28.sp,
             color = Color.White,
             modifier = Modifier.padding(bottom = 16.dp)
@@ -107,12 +111,10 @@ fun LibraryScreen(navController: NavHostController) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        val playlists = listOf("Playlist 1", "Playlist 2", "Playlist 3", "Playlist 4", "Playlist 5")
-
-        playlists.forEach { playlistName ->
+        playlists.value.forEach { (id, name) ->
             Button(      // Navigate to the WorkoutScreen route
                 onClick = {
-                    navController.navigate("workout/${playlistId}")
+                    navController.navigate("workout/$id")
                           },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -121,7 +123,7 @@ fun LibraryScreen(navController: NavHostController) {
                 shape = RoundedCornerShape(8.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Color.White)
             ) {
-                Text(text = playlistName, fontSize = 16.sp, color = Color.Black)
+                Text(text = name, fontSize = 16.sp, color = Color.Black)
             }
         }
     }
