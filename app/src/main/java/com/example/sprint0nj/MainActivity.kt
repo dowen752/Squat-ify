@@ -18,12 +18,32 @@ import androidx.navigation.NavHostController
 import android.widget.Toast // "Toast" is an Android API used to display the short confirmation messages after clicking the buttons
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.DpOffset
-
+import com.example.sprint0nj.data.Classes
+import com.example.sprint0nj.data.FirestoreRepository
+import com.example.sprint0nj.data.Classes.Playlist
+import com.example.sprint0nj.data.Classes.Workout
+import com.example.sprint0nj.data.Classes.WorkoutMods
 
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Hardcoding playlists, will remove soon
+
+//        val firestoreRepository = FirestoreRepository()
+//        val myPlaylist = Playlist(id = "0003",
+//            name = "Leg Day",
+//            workouts = mutableListOf(
+//                WorkoutMods.addWorkout(1, "Squats", null, 8, 3, "Standard squats, focus on depth."),
+//                WorkoutMods.addWorkout(2, "Leg Extensions", null, 12, 3, "Moderate weight leg extensions."),
+//                WorkoutMods.addWorkout(3, "Machine Leg Curls", null, 12, 3, "Standard leg curls."),
+//                WorkoutMods.addWorkout(4, "Deadlifts", null, 12, 3, "Deadlifts with light to moderate weight.")
+//            )
+//        )
+//        firestoreRepository.postPlaylist(myPlaylist)
+
+
         setContent {
             AppNavHost()  // Show your NavHost here
         }
