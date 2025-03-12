@@ -16,12 +16,27 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.compose.ui.platform.LocalContext
 import android.widget.Toast // "Toast" is an Android API used to display the short confirmation messages after clicking the buttons
-
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.navigation.compose.rememberNavController
+import com.example.sprint0nj.data.FirestoreRepository
+import com.example.sprint0nj.data.Classes.Playlist
 
 @Composable
-fun WorkoutScreen(navController: NavController) {
+fun WorkoutScreen(navController: NavController, playlistId: String) {
     // This captures the current context which is used in the callbacks for popup
     val context = LocalContext.current
+    val firestoreRepository = remember { FirestoreRepository()}
+    val scope = rememberCoroutineScope()
+    val playlist = remember { mutableStateOf<Playlist?>(null) }
+    LaunchedEffect(playlistId) {
+        playlist.value = firestoreRepository.fetchPlaylist(playlistId)
+    }
+
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -32,6 +47,10 @@ fun WorkoutScreen(navController: NavController) {
         // Shifted this down
         Spacer(modifier = Modifier.height(80.dp))
 
+        if (playlist.value == null) { // Loading if playlist hasnt been fetched yet
+            Text(text = "Loading...", fontSize = 20.sp, color = Color.Black)
+            return@Column
+        }
         // Top row with "Playlist #1" and a plus button on the right
         Row(
             modifier = Modifier
@@ -41,7 +60,7 @@ fun WorkoutScreen(navController: NavController) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "Playlist #1",
+                text = playlist.value?.name ?: "Unnamed Playlist",
                 fontSize = 24.sp,
                 color = Color.White
             )
@@ -65,14 +84,9 @@ fun WorkoutScreen(navController: NavController) {
 
         // Example list of workouts with #Reps and #Sets
         // In a real app, you might replace this with dynamic data
-        val workouts = listOf(
-            "Workout A",
-            "Workout B",
-            "Workout C",
-            "Workout D"
-        )
 
-        workouts.forEach { workout ->
+
+        playlist.value?.workouts?.forEach { workout ->
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -93,12 +107,12 @@ fun WorkoutScreen(navController: NavController) {
                 Column(
                     modifier = Modifier.weight(1f, fill = false).padding(start = 16.dp)
                 ) {
-                    Text(text = workout, fontSize = 16.sp, color = Color.Black)
+                    Text(text = workout.title, fontSize = 16.sp, color = Color.Black)
                     Spacer(modifier = Modifier.height(4.dp))
                     Row {
-                        Text(text = "# Reps:", fontSize = 14.sp, color = Color.Black)
+                        Text(text = "# Reps: ${workout.reps ?: "-"}", fontSize = 14.sp, color = Color.Black)
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(text = "# Sets:", fontSize = 14.sp, color = Color.Black)
+                        Text(text = "# Sets: ${workout.sets ?: "-"}", fontSize = 14.sp, color = Color.Black)
                     }
                 }
             }

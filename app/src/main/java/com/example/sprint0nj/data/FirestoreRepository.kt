@@ -1,6 +1,9 @@
 package com.example.sprint0nj.data
+import android.util.Log
 import com.google.firebase.firestore.FirebaseFirestore
 import com.example.sprint0nj.data.Classes.Playlist
+import kotlinx.coroutines.tasks.await
+
 
 class FirestoreRepository {
 
@@ -8,30 +11,44 @@ class FirestoreRepository {
     private val playlistsCollection = db.collection("playlists")
 
     // Function to add a playlist to Firestore using provided playlist
-    fun addPlaylist(playlist: Playlist, callback: (Boolean, String?) -> Unit) {
-        playlistsCollection.document(playlist.id).set(playlist) // sets document w/ id "document.id"to value of playlist
+    fun postPlaylist(playlist: Playlist) {
+        playlistsCollection.document(playlist.id.toString()).set(playlist)
             .addOnSuccessListener {
-                callback(true, null) // If successful, continue
+                Log.d("FirestoreRepo", "Playlist '${playlist.name}' successfully posted to Firestore.")
             }
             .addOnFailureListener { exception ->
-                callback(false, exception.message) // If fails, return error message and false
+                Log.d("FirestoreRepo", "Error posting playlist '${playlist.name}': ${exception.message}")
             }
     }
-    fun fetchPlaylist(playlistId: String, callback: (Playlist?) -> Unit){
-        playlistsCollection.document(playlistId).get()
-            .addOnSuccessListener { document ->
-                if(document.exists()){
-                    val fetchedPlaylist = document.toObject(Playlist::class.java)
-                    callback(fetchedPlaylist)
-                }
-                else{
-                    callback(null)
-                }
+    suspend fun fetchPlaylist(playlistId: String): Playlist? {
+        return try {
+            val document = playlistsCollection.document(playlistId).get().await()
+            if (document.exists()) {
+                document.toObject(Playlist::class.java)
+            } else {
+                null
             }
-            .addOnFailureListener {
-                callback(null)
-            }
+        } catch (e: Exception) {
+            null
+        }
     }
 
+    // Fetch all playlist IDs from firestore collection
+    suspend fun fetchPlaylistIds(): List<String> {
+        return try {
+            val snapshot = playlistsCollection.get().await()
+            snapshot.documents.mapNotNull { it.id } // Extract document IDs
+        } catch (e: Exception) {
+            emptyList() // Return empty list if there's an error
+        }
+    }
+    suspend fun fetchPlaylistSummaries(): List<Pair<String, String>> {
+        val playlistNames = playlistsCollection.get().await()
+        return playlistNames.documents.map { document ->
+            val id = document.id
+            val name = document.data?.get("name") as String ?: "Unnamed Playlist"
+            id to name
+        }
+    }
 
 }

@@ -18,12 +18,32 @@ import androidx.navigation.NavHostController
 import android.widget.Toast // "Toast" is an Android API used to display the short confirmation messages after clicking the buttons
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.DpOffset
-
+import com.example.sprint0nj.data.Classes
+import com.example.sprint0nj.data.FirestoreRepository
+import com.example.sprint0nj.data.Classes.Playlist
+import com.example.sprint0nj.data.Classes.Workout
+import com.example.sprint0nj.data.Classes.WorkoutMods
 
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Hardcoding playlists, will remove soon
+
+//        val firestoreRepository = FirestoreRepository()
+//        val myPlaylist = Playlist(id = "0003",
+//            name = "Leg Day",
+//            workouts = mutableListOf(
+//                WorkoutMods.addWorkout(1, "Squats", null, 8, 3, "Standard squats, focus on depth."),
+//                WorkoutMods.addWorkout(2, "Leg Extensions", null, 12, 3, "Moderate weight leg extensions."),
+//                WorkoutMods.addWorkout(3, "Machine Leg Curls", null, 12, 3, "Standard leg curls."),
+//                WorkoutMods.addWorkout(4, "Deadlifts", null, 12, 3, "Deadlifts with light to moderate weight.")
+//            )
+//        )
+//        firestoreRepository.postPlaylist(myPlaylist)
+
+
         setContent {
             AppNavHost()  // Show your NavHost here
         }
@@ -33,6 +53,13 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun LibraryScreen(navController: NavHostController) {
     val context = LocalContext.current
+    val firestoreRepository = remember {FirestoreRepository()}
+    val playlists = remember { mutableStateOf<List<Pair<String, String>>>(emptyList())}
+
+    LaunchedEffect(Unit) {
+        playlists.value = firestoreRepository.fetchPlaylistSummaries()
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -43,7 +70,7 @@ fun LibraryScreen(navController: NavHostController) {
         Spacer(modifier = Modifier.height(80.dp))
 
         Text(
-            text = "My Lists",
+            text = "My Playlists",
             fontSize = 28.sp,
             color = Color.White,
             modifier = Modifier.padding(bottom = 16.dp)
@@ -84,12 +111,10 @@ fun LibraryScreen(navController: NavHostController) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        val playlists = listOf("Playlist 1", "Playlist 2", "Playlist 3", "Playlist 4", "Playlist 5")
-
-        playlists.forEach { playlistName ->
+        playlists.value.forEach { (id, name) ->
             Button(      // Navigate to the WorkoutScreen route
                 onClick = {
-                    navController.navigate("workout")
+                    navController.navigate("workout/$id")
                           },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -98,7 +123,7 @@ fun LibraryScreen(navController: NavHostController) {
                 shape = RoundedCornerShape(8.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Color.White)
             ) {
-                Text(text = playlistName, fontSize = 16.sp, color = Color.Black)
+                Text(text = name, fontSize = 16.sp, color = Color.Black)
             }
         }
     }

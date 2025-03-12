@@ -21,9 +21,9 @@ fun AppNavHost(
         composable("library") {
             LibraryScreen(navController) // <-- Library screen
         }
-        composable("workout") {
-
-            WorkoutScreen(navController) // <-- Workout Screen
+        composable("workout/{playlistId}") { backStackEntry ->
+            val playlistId = backStackEntry.arguments?.getString("playlistId") ?: return@composable
+            WorkoutScreen(navController, playlistId) // <-- Workout Screen
         }
     }
 }
