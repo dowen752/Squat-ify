@@ -65,21 +65,23 @@ fun WorkoutScreen(navController: NavController, playlistId: String) {
                 color = Color.White
             )
 
-            // Call the reusable plus button
-            PlusButtonWithMenu(
-                menuOptions = listOf(
-                    // First menu option with the title "Add Workout"
-                    // When clicked, a Toast message is displayed
-                    MenuOption("Add Workout") {
-                        Toast.makeText(context, "Add Workout clicked", Toast.LENGTH_SHORT).show()
-                    },
-                    // Second menu option with the title "Import Workout" (probably could use a different title)
-                    // When clicked, a Toast message is displayed
-                    MenuOption("Import Workout") {
-                        Toast.makeText(context, "Import Workout clicked", Toast.LENGTH_SHORT).show()
-                    }
+            Box(
+                modifier = Modifier.fillMaxWidth(),
+                contentAlignment = Alignment.TopEnd
+            ) {
+                PlusButtonWithMenu(
+                    menuOptions = listOf(
+
+                        MenuOption("Add Workout") {
+
+                        },
+                        // For "Import Workout", we keep the Toast (or change as needed).
+                        MenuOption("Import Workout") {
+                            Toast.makeText(context, "Import Workout clicked", Toast.LENGTH_SHORT).show()
+                        }
+                    )
                 )
-            )
+            }
         }
 
         // Example list of workouts with #Reps and #Sets
