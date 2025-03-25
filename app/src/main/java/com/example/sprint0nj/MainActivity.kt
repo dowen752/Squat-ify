@@ -11,18 +11,14 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
+
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import android.widget.Toast // "Toast" is an Android API used to display the short confirmation messages after clicking the buttons
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.DpOffset
-import com.example.sprint0nj.data.Classes
 import com.example.sprint0nj.data.FirestoreRepository
-import com.example.sprint0nj.data.Classes.Playlist
-import com.example.sprint0nj.data.Classes.Workout
-import com.example.sprint0nj.data.Classes.WorkoutMods
+
 
 
 class MainActivity : ComponentActivity() {
@@ -96,7 +92,7 @@ fun LibraryScreen(navController: NavHostController) {
                     // First menu option with the title "Add Playlist"
                     // When clicked, a Toast message is displayed
                     MenuOption("Add Playlist") {
-                        Toast.makeText(context, "Add Playlist clicked", Toast.LENGTH_SHORT).show()
+                        //Toast.makeText(context, "Add Playlist clicked", Toast.LENGTH_SHORT).show()
                     },
                     // Second menu option with the title "Import Playlist"
                     // When clicked, a Toast message is displayed
