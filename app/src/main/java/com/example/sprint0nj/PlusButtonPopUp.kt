@@ -29,10 +29,7 @@ import android.widget.Toast
 
 import androidx.compose.ui.platform.LocalContext
 
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
+
 
 
 // Data class representing a single menu option
@@ -192,20 +189,6 @@ fun PlusButtonWithMenu(
             }
         }
 
-
-       /* For different button
-
-       FloatingActionButton(
-            onClick = { menuExpanded = true },
-            // Use your app's primary color for a standard look; adjust as needed.
-            containerColor = MaterialTheme.colorScheme.primary,
-            contentColor = Color.White,
-            modifier = Modifier.size(56.dp) // Optionally adjust the size if needed.
-        ) {
-            // Icon for the plus sign. This is the standard material icon for "add".
-            Icon(imageVector = Icons.Default.Add, contentDescription = "Add")
-        }
-        */
 
         // DropdownMenu:
         // This menu appears when menuExpanded is true and displays the list of menu options
