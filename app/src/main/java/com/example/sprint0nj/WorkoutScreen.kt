@@ -68,7 +68,7 @@ fun WorkoutScreen(navController: NavController, playlistId: String) {
         // Shifted this down
         Spacer(modifier = Modifier.height(80.dp))
 
-        if (playlist.value == null) { // Loading if playlist hasn't been fetched yet
+        if (playlist.value == null) { // Loading if playlist hasnt been fetched yet
             Text(text = "Loading...", fontSize = 20.sp, color = Color.Black)
             return@Column
         }
@@ -104,12 +104,15 @@ fun WorkoutScreen(navController: NavController, playlistId: String) {
             }
         }
 
+        // For list of workouts:
+
         // Display the WorkoutSelectionDialog if the state is true.
         if (showWorkoutSelectionDialog) {
             WorkoutSelectionDialog(
                 availableWorkouts = workoutsList.value, // Pass the workouts list.
                 onDismiss = { showWorkoutSelectionDialog = false },
                 onConfirm = { workoutEntry ->
+                    // Process the confirmed workout entry here.
                     Toast.makeText(
                         context,
                         "Workout added: ${workoutEntry.name} with ${workoutEntry.reps} reps and ${workoutEntry.sets} sets",
@@ -119,6 +122,9 @@ fun WorkoutScreen(navController: NavController, playlistId: String) {
                 }
             )
         }
+
+        // Example list of workouts with #Reps and #Sets
+        // In a real app, you might replace this with dynamic data
         playlist.value?.workouts?.forEach { workout ->
             Row(
                 modifier = Modifier
@@ -149,17 +155,7 @@ fun WorkoutScreen(navController: NavController, playlistId: String) {
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(text = "# Sets: ${workout.sets ?: "-"}", fontSize = 14.sp, color = Color.Black)
                     }
-                    workout.tutorialLink?.let {
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = "Tutorial: $it",
-                            fontSize = 14.sp,
-                            color = Color.Black,
-                            modifier = Modifier.padding(top = 8.dp)
-                        )
-                    }
                 }
-
                 // "..." button with dropdown menu containing Share and Remove (placeholder)
                 MoreOptionsMenu(
                     onShare = {
