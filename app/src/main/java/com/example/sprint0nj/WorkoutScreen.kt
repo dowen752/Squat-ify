@@ -95,7 +95,7 @@ fun WorkoutScreen(navController: NavController, playlistId: String) {
                             // This callback is handled here:
                             showWorkoutSelectionDialog = true
                             // debug Toast:
-                            Toast.makeText(context, "Add Workout callback triggered", Toast.LENGTH_SHORT).show()
+                            //Toast.makeText(context, "Add Workout callback triggered", Toast.LENGTH_SHORT).show()
                         },
                         MenuOption("Import Workout") {
                             Toast.makeText(context, "Import Workout clicked", Toast.LENGTH_SHORT).show()

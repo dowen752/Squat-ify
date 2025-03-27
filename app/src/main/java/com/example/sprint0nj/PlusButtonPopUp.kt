@@ -115,7 +115,7 @@ fun WorkoutSelectionDialog(
 
     AlertDialog(
         onDismissRequest = { onDismiss() },
-        title = { Text("Select Workout:") },
+        //title = { Text("Select Workout:") }, // Optional title if needed.
         text = {
             Column {
                 // Dropdown for selecting a workout.
@@ -127,7 +127,7 @@ fun WorkoutSelectionDialog(
 
                     ) {
                         Text(
-                            text = if (selectedWorkout.isEmpty()) "Choose a workout" else selectedWorkout,
+                            text = if (selectedWorkout.isEmpty()) "Select workout" else selectedWorkout,
                             fontSize = 16.sp
 
                         )
