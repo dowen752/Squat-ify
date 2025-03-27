@@ -11,16 +11,35 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
+
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavGraph
 import androidx.navigation.NavHostController
+import android.widget.Toast // "Toast" is an Android API used to display the short confirmation messages after clicking the buttons
+import androidx.compose.ui.platform.LocalContext
+import com.example.sprint0nj.data.FirestoreRepository
+
 
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Hardcoding playlists, will remove soon
+
+//        val firestoreRepository = FirestoreRepository()
+//        val myPlaylist = Playlist(id = "0003",
+//            name = "Leg Day",
+//            workouts = mutableListOf(
+//                WorkoutMods.addWorkout(1, "Squats", null, 8, 3, "Standard squats, focus on depth."),
+//                WorkoutMods.addWorkout(2, "Leg Extensions", null, 12, 3, "Moderate weight leg extensions."),
+//                WorkoutMods.addWorkout(3, "Machine Leg Curls", null, 12, 3, "Standard leg curls."),
+//                WorkoutMods.addWorkout(4, "Deadlifts", null, 12, 3, "Deadlifts with light to moderate weight.")
+//            )
+//        )
+//        firestoreRepository.postPlaylist(myPlaylist)
+
+
         setContent {
             AppNavHost()  // Show your NavHost here
         }
@@ -29,6 +48,14 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun LibraryScreen(navController: NavHostController) {
+    val context = LocalContext.current
+    val firestoreRepository = remember {FirestoreRepository()}
+    val playlists = remember { mutableStateOf<List<Pair<String, String>>>(emptyList())}
+
+    LaunchedEffect(Unit) {
+        playlists.value = firestoreRepository.fetchPlaylistSummaries()
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -39,7 +66,7 @@ fun LibraryScreen(navController: NavHostController) {
         Spacer(modifier = Modifier.height(80.dp))
 
         Text(
-            text = "My Lists",
+            text = "My Playlists",
             fontSize = 28.sp,
             color = Color.White,
             modifier = Modifier.padding(bottom = 16.dp)
@@ -51,32 +78,39 @@ fun LibraryScreen(navController: NavHostController) {
         }
         */
 
-        // Plus Button
-        Button(
-            onClick = { /* Handle adding a new playlist */ },
-            modifier = Modifier
-                .align(Alignment.End)
-                .size(56.dp), // Keep size for better visibility
-            shape = RoundedCornerShape(12.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Color.White),
-            contentPadding = PaddingValues(0.dp) // Removes extra padding inside the button
+        // A Box is used as a container that fills the available width
+        // The contentAlignment parameter ensures that the children (the plus button) is positioned at the top-right of the Box
+        // "Toast" is an Android API used to display the short confirmation messages after clicking the buttons
+        Box(
+            modifier = Modifier.fillMaxWidth(),
+            contentAlignment = Alignment.TopEnd
         ) {
-            Box(
-                modifier = Modifier.fillMaxSize(), // Ensures text is centered
-                contentAlignment = Alignment.Center
-            ) {
-                Text("+", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = Color.Black)
-            }
+            // Call the reusable PlusButtonWithMenu composable
+            // List of MenuOption objects is passed to define the menu items
+            PlusButtonWithMenu(
+                menuOptions = listOf(
+                    // First menu option with the title "Add Playlist"
+                    // When clicked, a Toast message is displayed
+                    MenuOption("Add Playlist") {
+                        //Toast.makeText(context, "Add Playlist clicked", Toast.LENGTH_SHORT).show()
+                    },
+                    // Second menu option with the title "Import Playlist"
+                    // When clicked, a Toast message is displayed
+                    MenuOption("Import Playlist") {
+                        Toast.makeText(context, "Import Playlist clicked", Toast.LENGTH_SHORT).show()
+                    }
+                )
+            )
+
         }
+
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        val playlists = listOf("Playlist 1", "Playlist 2", "Playlist 3", "Playlist 4", "Playlist 5")
-
-        playlists.forEach { playlistName ->
+        playlists.value.forEach { (id, name) ->
             Button(      // Navigate to the WorkoutScreen route
                 onClick = {
-                    navController.navigate("workout")
+                    navController.navigate("workout/$id")
                           },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -85,7 +119,7 @@ fun LibraryScreen(navController: NavHostController) {
                 shape = RoundedCornerShape(8.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Color.White)
             ) {
-                Text(text = playlistName, fontSize = 16.sp, color = Color.Black)
+                Text(text = name, fontSize = 16.sp, color = Color.Black)
             }
         }
     }
