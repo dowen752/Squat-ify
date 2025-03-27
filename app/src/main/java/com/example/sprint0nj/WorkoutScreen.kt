@@ -17,6 +17,7 @@ import androidx.navigation.NavController
 import androidx.compose.ui.platform.LocalContext
 import android.widget.Toast // "Toast" is an Android API used to display the short confirmation messages after clicking the buttons
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -24,6 +25,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.rememberNavController
 import com.example.sprint0nj.data.FirestoreRepository
 import com.example.sprint0nj.data.Classes.Playlist
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+
 
 @Composable
 fun WorkoutScreen(navController: NavController, playlistId: String) {
@@ -32,8 +36,26 @@ fun WorkoutScreen(navController: NavController, playlistId: String) {
     val firestoreRepository = remember { FirestoreRepository()}
     val scope = rememberCoroutineScope()
     val playlist = remember { mutableStateOf<Playlist?>(null) }
+
+
+    // 1. State for the list of available workouts from Firestore.
+    val workoutsList = remember { mutableStateOf<List<String>>(emptyList()) }
+
+    // 2. State to control the visibility of the workout selection dialog.
+    var showWorkoutSelectionDialog by remember { mutableStateOf(false) }
+
+    // 3. Fetch both the playlist and workouts from Firestore.
     LaunchedEffect(playlistId) {
         playlist.value = firestoreRepository.fetchPlaylist(playlistId)
+        // Here is where you fetch the workouts list from Firestore.
+        // Uncomment and replace with your actual Firestore query.
+        /*
+        FirebaseFirestore.getInstance().collection("workouts")
+            .get()
+            .addOnSuccessListener { snapshot ->
+                workoutsList.value = snapshot.documents.mapNotNull { it.getString("name") }
+            }
+        */
     }
 
 
@@ -65,17 +87,16 @@ fun WorkoutScreen(navController: NavController, playlistId: String) {
                 color = Color.White
             )
 
-            Box(
-                modifier = Modifier.fillMaxWidth(),
-                contentAlignment = Alignment.TopEnd
-            ) {
+            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.TopEnd) {
+                // Use PlusButtonWithMenu without referencing workouts state.
                 PlusButtonWithMenu(
                     menuOptions = listOf(
-
                         MenuOption("Add Workout") {
-
+                            // This callback is handled here:
+                            showWorkoutSelectionDialog = true
+                            // debug Toast:
+                            Toast.makeText(context, "Add Workout callback triggered", Toast.LENGTH_SHORT).show()
                         },
-                        // For "Import Workout", we keep the Toast (or change as needed).
                         MenuOption("Import Workout") {
                             Toast.makeText(context, "Import Workout clicked", Toast.LENGTH_SHORT).show()
                         }
@@ -83,6 +104,27 @@ fun WorkoutScreen(navController: NavController, playlistId: String) {
                 )
             }
         }
+
+        // For list of workouts:
+
+        // Display the WorkoutSelectionDialog if the state is true.
+        if (showWorkoutSelectionDialog) {
+            WorkoutSelectionDialog(
+                availableWorkouts = workoutsList.value, // Pass the workouts list.
+                onDismiss = { showWorkoutSelectionDialog = false },
+                onConfirm = { workoutEntry ->
+                    // Process the confirmed workout entry here.
+                    Toast.makeText(
+                        context,
+                        "Workout added: ${workoutEntry.name} with ${workoutEntry.reps} reps and ${workoutEntry.sets} sets",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    showWorkoutSelectionDialog = false
+                }
+            )
+        }
+
+
 
         // Example list of workouts with #Reps and #Sets
         // In a real app, you might replace this with dynamic data
