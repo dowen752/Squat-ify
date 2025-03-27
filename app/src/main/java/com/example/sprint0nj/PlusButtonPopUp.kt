@@ -28,8 +28,10 @@ import androidx.compose.ui.text.input.TextFieldValue
 import android.widget.Toast
 
 import androidx.compose.ui.platform.LocalContext
-
-
+import com.example.sprint0nj.data.Classes.Workout
+import com.example.sprint0nj.data.Classes.Playlist
+import com.example.sprint0nj.data.FirestoreRepository
+import java.util.UUID
 
 
 // Data class representing a single menu option
@@ -45,7 +47,7 @@ fun PlaylistNameDialog(
     onConfirm: (String) -> Unit // Called with the entered playlist name when confirmed
 ) {
     var playlistName by remember { mutableStateOf(TextFieldValue("")) }
-
+    val firestoreRepository = remember { FirestoreRepository() }
     AlertDialog(
         onDismissRequest = { onDismiss() },
         title = { Text("Playlist Name:") },
@@ -63,12 +65,11 @@ fun PlaylistNameDialog(
             // Confirm button returns the entered playlist name
             Button(
                 onClick = {
-                    /*
-
-                    Replace Toast with firestore integration for playlists
-
-
-                    */
+                    val playlist = Playlist(
+                        id = UUID.randomUUID().toString(),
+                        name = playlistName.text
+                    )
+                    firestoreRepository.postPlaylist(playlist)
                     onConfirm(playlistName.text) // Pass the input to the onConfirm callback
                     onDismiss() // Close the dialog after confirming
                 },
@@ -104,7 +105,7 @@ data class WorkoutEntry(
 
 @Composable
 fun WorkoutSelectionDialog(
-    availableWorkouts: List<String>,  // This list should come from your Firebase query.
+    playlist: Playlist,
     onDismiss: () -> Unit,
     onConfirm: (WorkoutEntry) -> Unit
 ) {
@@ -112,6 +113,13 @@ fun WorkoutSelectionDialog(
     var repsText by remember { mutableStateOf("") }
     var setsText by remember { mutableStateOf("") }
     var isDropdownExpanded by remember { mutableStateOf(false) }
+    val availableWorkouts = remember { mutableStateOf<List<Workout>>(emptyList())}
+    val firestoreRepository = remember {FirestoreRepository()}
+//    val playlist = remember { mutableStateOf<Playlist?>(null) }
+
+    LaunchedEffect(Unit){
+        availableWorkouts.value = firestoreRepository.fetchWorkouts()
+    }
 
     AlertDialog(
         onDismissRequest = { onDismiss() },
@@ -127,7 +135,7 @@ fun WorkoutSelectionDialog(
 
                     ) {
                         Text(
-                            text = if (selectedWorkout.isEmpty()) "Select workout" else selectedWorkout,
+                            text = selectedWorkout.ifEmpty { "Select workout" },
                             fontSize = 16.sp
 
                         )
@@ -136,12 +144,14 @@ fun WorkoutSelectionDialog(
                         expanded = isDropdownExpanded,
                         onDismissRequest = { isDropdownExpanded = false }
                     ) {
-                        availableWorkouts.forEach { workout ->
+                        availableWorkouts.value.forEach { workout ->
                             DropdownMenuItem(
-                                text = { Text(workout) },
+                                text = { Text(workout.title) },
                                 onClick = {
-                                    selectedWorkout = workout
+                                    selectedWorkout = workout.title
                                     isDropdownExpanded = false
+                                    repsText = workout.reps?.toString() ?: "-"
+                                    setsText = workout.sets?.toString() ?: "-"
                                 }
                             )
                         }
@@ -172,6 +182,8 @@ fun WorkoutSelectionDialog(
                     if (selectedWorkout.isNotEmpty()) {
                         val reps = repsText.toIntOrNull() ?: 0
                         val sets = setsText.toIntOrNull() ?: 0
+                        playlist.workouts.add(Workout(UUID.randomUUID().toString(), selectedWorkout, null, reps, sets, ""))
+                        firestoreRepository.postPlaylist(playlist)
                         onConfirm(WorkoutEntry(selectedWorkout, reps, sets))
                         onDismiss()
                     }
@@ -272,6 +284,7 @@ fun PlusButtonWithMenu(
             PlaylistNameDialog(
                 onDismiss = { showPlaylistDialog = false },
                 onConfirm = { playlistName ->
+
                     /*
 
                     Replace Toast with firestore integration to add the new playlist to database.

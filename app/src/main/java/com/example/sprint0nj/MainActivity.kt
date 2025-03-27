@@ -50,11 +50,8 @@ class MainActivity : ComponentActivity() {
 fun LibraryScreen(navController: NavHostController) {
     val context = LocalContext.current
     val firestoreRepository = remember {FirestoreRepository()}
-    val playlists = remember { mutableStateOf<List<Pair<String, String>>>(emptyList())}
+    val playlists by firestoreRepository.getPlaylistsFlow().collectAsState(initial = emptyList())
 
-    LaunchedEffect(Unit) {
-        playlists.value = firestoreRepository.fetchPlaylistSummaries()
-    }
 
     Column(
         modifier = Modifier
@@ -107,7 +104,7 @@ fun LibraryScreen(navController: NavHostController) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        playlists.value.forEach { (id, name) ->
+        playlists.forEach { (id, name) ->
             Button(      // Navigate to the WorkoutScreen route
                 onClick = {
                     navController.navigate("workout/$id")

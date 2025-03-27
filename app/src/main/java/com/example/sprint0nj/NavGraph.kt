@@ -1,5 +1,6 @@
 package com.example.sprint0nj
 
+import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -22,7 +23,11 @@ fun AppNavHost(
             LibraryScreen(navController) // <-- Library screen
         }
         composable("workout/{playlistId}") { backStackEntry ->
-            val playlistId = backStackEntry.arguments?.getString("playlistId") ?: return@composable
+            val playlistId = backStackEntry.arguments?.getString("playlistId")
+            if (playlistId.isNullOrEmpty()) {
+                Log.d("NavGraph", "Missing playlistId in navigation args")
+                return@composable
+            }
             WorkoutScreen(navController, playlistId) // <-- Workout Screen
         }
     }
