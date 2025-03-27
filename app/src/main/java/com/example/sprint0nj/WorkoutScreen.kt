@@ -1,10 +1,7 @@
 package com.example.sprint0nj
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -20,6 +17,7 @@ import androidx.navigation.NavController
 import androidx.compose.ui.platform.LocalContext
 import android.widget.Toast // "Toast" is an Android API used to display the short confirmation messages after clicking the buttons
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -27,20 +25,39 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.rememberNavController
 import com.example.sprint0nj.data.FirestoreRepository
 import com.example.sprint0nj.data.Classes.Playlist
-// Import the separate MoreOptionsMenu composable
-import com.example.sprint0nj.MoreOptionsMenu
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+
 
 @Composable
 fun WorkoutScreen(navController: NavController, playlistId: String) {
     // This captures the current context which is used in the callbacks for popup
     val context = LocalContext.current
-    val firestoreRepository = remember { FirestoreRepository() }
+    val firestoreRepository = remember { FirestoreRepository()}
     val scope = rememberCoroutineScope()
     val playlist = remember { mutableStateOf<Playlist?>(null) }
 
+
+    // 1. State for the list of available workouts from Firestore.
+    val workoutsList = remember { mutableStateOf<List<String>>(emptyList()) }
+
+    // 2. State to control the visibility of the workout selection dialog.
+    var showWorkoutSelectionDialog by remember { mutableStateOf(false) }
+
+    // 3. Fetch both the playlist and workouts from Firestore.
     LaunchedEffect(playlistId) {
         playlist.value = firestoreRepository.fetchPlaylist(playlistId)
+        // Here is where you fetch the workouts list from Firestore.
+        // Uncomment and replace with your actual Firestore query.
+        /*
+        FirebaseFirestore.getInstance().collection("workouts")
+            .get()
+            .addOnSuccessListener { snapshot ->
+                workoutsList.value = snapshot.documents.mapNotNull { it.getString("name") }
+            }
+        */
     }
+
 
     Column(
         modifier = Modifier
@@ -52,7 +69,7 @@ fun WorkoutScreen(navController: NavController, playlistId: String) {
         // Shifted this down
         Spacer(modifier = Modifier.height(80.dp))
 
-        if (playlist.value == null) { // Loading if playlist hasn't been fetched yet
+        if (playlist.value == null) { // Loading if playlist hasnt been fetched yet
             Text(text = "Loading...", fontSize = 20.sp, color = Color.Black)
             return@Column
         }
@@ -70,17 +87,16 @@ fun WorkoutScreen(navController: NavController, playlistId: String) {
                 color = Color.White
             )
 
-            Box(
-                modifier = Modifier.fillMaxWidth(),
-                contentAlignment = Alignment.TopEnd
-            ) {
+            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.TopEnd) {
+                // Use PlusButtonWithMenu without referencing workouts state.
                 PlusButtonWithMenu(
                     menuOptions = listOf(
                         MenuOption("Add Workout") {
-                            // Callback for adding a workout can be implemented here
-                            Toast.makeText(context, "Add Workout clicked", Toast.LENGTH_SHORT).show()
+                            // This callback is handled here:
+                            showWorkoutSelectionDialog = true
+                            // debug Toast:
+                            //Toast.makeText(context, "Add Workout callback triggered", Toast.LENGTH_SHORT).show()
                         },
-                        // For "Import Workout", we keep the Toast (or change as needed).
                         MenuOption("Import Workout") {
                             Toast.makeText(context, "Import Workout clicked", Toast.LENGTH_SHORT).show()
                         }
@@ -89,54 +105,59 @@ fun WorkoutScreen(navController: NavController, playlistId: String) {
             }
         }
 
-        // LazyColumn for scrollable workouts list
-        LazyColumn(
-            modifier = Modifier.weight(1f) // This makes the LazyColumn take up available vertical space and be scrollable
-        ) {
-            // Example list of workouts with #Reps and #Sets
-            // In a real app, you might replace this with dynamic data
-            items(playlist.value?.workouts ?: emptyList()) { workout ->
-                Row(
+        // For list of workouts:
+
+        // Display the WorkoutSelectionDialog if the state is true.
+        if (showWorkoutSelectionDialog) {
+            WorkoutSelectionDialog(
+                availableWorkouts = workoutsList.value, // Pass the workouts list.
+                onDismiss = { showWorkoutSelectionDialog = false },
+                onConfirm = { workoutEntry ->
+                    // Process the confirmed workout entry here.
+                    Toast.makeText(
+                        context,
+                        "Workout added: ${workoutEntry.name} with ${workoutEntry.reps} reps and ${workoutEntry.sets} sets",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    showWorkoutSelectionDialog = false
+                }
+            )
+        }
+
+
+
+        // Example list of workouts with #Reps and #Sets
+        // In a real app, you might replace this with dynamic data
+
+
+        playlist.value?.workouts?.forEach { workout ->
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp)
+                    .background(Color.White, RoundedCornerShape(8.dp))
+                    .padding(16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Left placeholder icon/box
+                Box(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp)
-                        .background(Color.White, RoundedCornerShape(8.dp))
-                        .padding(16.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                        .size(32.dp)
+                        .background(Color.Gray, RoundedCornerShape(4.dp))
+                )
+
+                // Text details
+                Column(
+                    modifier = Modifier.weight(1f, fill = false).padding(start = 16.dp)
                 ) {
-                    // Left placeholder icon/box
-                    Box(
-                        modifier = Modifier
-                            .size(32.dp)
-                            .background(Color.Gray, RoundedCornerShape(4.dp))
-                    )
-
-                    // Text details
-                    Column(
-                        modifier = Modifier
-                            .weight(1f, fill = false)
-                            .padding(start = 16.dp)
-                    ) {
-                        Text(text = workout.title, fontSize = 16.sp, color = Color.Black)
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Row {
-                            Text(text = "# Reps: ${workout.reps ?: "-"}", fontSize = 14.sp, color = Color.Black)
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(text = "# Sets: ${workout.sets ?: "-"}", fontSize = 14.sp, color = Color.Black)
-                        }
+                    Text(text = workout.title, fontSize = 16.sp, color = Color.Black)
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Row {
+                        Text(text = "# Reps: ${workout.reps ?: "-"}", fontSize = 14.sp, color = Color.Black)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(text = "# Sets: ${workout.sets ?: "-"}", fontSize = 14.sp, color = Color.Black)
                     }
-
-                    // "..." button with dropdown menu containing Share and Remove (placeholder)
-                    MoreOptionsMenu(
-                        onShare = {
-                            Toast.makeText(context, "Share workout: ${workout.title}", Toast.LENGTH_SHORT).show()
-                        },
-                        onRemove = {
-                            // Placeholder only: no real removal logic
-                            Toast.makeText(context, "Remove clicked for workout: ${workout.title}", Toast.LENGTH_SHORT).show()
-                        }
-                    )
                 }
             }
         }
@@ -151,11 +172,11 @@ fun WorkoutScreen(navController: NavController, playlistId: String) {
                 .padding(8.dp),
             horizontalArrangement = Arrangement.SpaceAround
         ) {
-            /*
-            {
-                Button(onClick = { navController.navigate("home") }) {
-                    Text("Home")
-                }
+        /*
+        {
+            Button(onClick = { navController.navigate("home") }) {
+                Text("Home")
+            }
             */
             Button(onClick = { navController.navigate("library") }) {
                 Text("Library")
