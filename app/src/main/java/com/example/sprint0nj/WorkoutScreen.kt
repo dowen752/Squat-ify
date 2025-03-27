@@ -31,6 +31,7 @@ import androidx.compose.runtime.setValue
 // Import the separate MoreOptionsMenu composable from its own file.
 import com.example.sprint0nj.MoreOptionsMenu
 import com.example.sprint0nj.data.Classes.Workout
+import kotlinx.coroutines.launch
 
 
 @Composable
@@ -41,6 +42,12 @@ fun WorkoutScreen(navController: NavController, playlistId: String) {
     val scope = rememberCoroutineScope()
     val playlist = remember { mutableStateOf<Playlist?>(null) }
 
+    val localFetchPlaylist = {
+        scope.launch{
+            val updated = firestoreRepository.fetchPlaylist(playlistId)
+            playlist.value = updated
+        }
+    }
 
     // 1. State for the list of available workouts from Firestore.
     val workoutsList = remember { mutableStateOf<List<Workout>>(emptyList()) }
@@ -51,19 +58,7 @@ fun WorkoutScreen(navController: NavController, playlistId: String) {
     // 3. Fetch both the playlist and workouts from Firestore.
     LaunchedEffect(playlistId) {
         Log.d("WorkoutScreen", "🎯 Attempting to fetch playlist with ID: $playlistId")
-
-        try {
-            val result = firestoreRepository.fetchPlaylist(playlistId)
-            if (result != null) {
-                Log.d("WorkoutScreen", "Playlist loaded: ${result.name}")
-                playlist.value = result
-            } else {
-                Log.e("WorkoutScreen", "Playlist was null (not found in Firestore?)")
-            }
-        } catch (e: Exception) {
-            Log.e("WorkoutScreen", "Exception during fetch: ${e.message}")
-            e.printStackTrace()
-        }
+        localFetchPlaylist()
 
         // Here is where you fetch the workouts list from Firestore.
         // Uncomment and replace with your actual Firestore query.
@@ -139,6 +134,7 @@ fun WorkoutScreen(navController: NavController, playlistId: String) {
                     showWorkoutSelectionDialog = false
                 }
             )
+            localFetchPlaylist()
         }
 
         // Example list of workouts with #Reps and #Sets
