@@ -32,6 +32,15 @@ class FirestoreRepository {
             null
         }
     }
+    suspend fun fetchWorkouts(): List<Pair<String, String>> {
+        val snapshot = db.collection("Workouts").get().await()
+        return snapshot.documents.map {
+            val id = it.id
+            val title = it.getString("title") ?: "Unnamed"
+            id to title
+        }
+    }
+
 
     // Fetch all playlist IDs from firestore collection
     suspend fun fetchPlaylistIds(): List<String> {
@@ -42,6 +51,7 @@ class FirestoreRepository {
             emptyList() // Return empty list if there's an error
         }
     }
+
     suspend fun fetchPlaylistSummaries(): List<Pair<String, String>> {
         val playlistNames = playlistsCollection.get().await()
         return playlistNames.documents.map { document ->
@@ -50,5 +60,6 @@ class FirestoreRepository {
             id to name
         }
     }
+
 
 }

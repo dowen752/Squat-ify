@@ -33,6 +33,10 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import com.example.sprint0nj.data.Classes
+import com.example.sprint0nj.data.FirestoreRepository
+import kotlinx.coroutines.CoroutineScope
+import java.util.UUID
 
 
 // Data class representing a single menu option
@@ -44,11 +48,12 @@ data class MenuOption(
 
 @Composable
 fun PlaylistNameDialog(
+    firestoreRepo: FirestoreRepository,
+    coroutineScope: CoroutineScope,
     onDismiss: () -> Unit,      // Called to dismiss the dialog
     onConfirm: (String) -> Unit // Called with the entered playlist name when confirmed
 ) {
     var playlistName by remember { mutableStateOf(TextFieldValue("")) }
-
     AlertDialog(
         onDismissRequest = { onDismiss() },
         title = { Text("Playlist Name:") },
@@ -66,12 +71,6 @@ fun PlaylistNameDialog(
             // Confirm button returns the entered playlist name
             Button(
                 onClick = {
-                    /*
-
-                    Replace Toast with firestore integration for playlists
-
-
-                    */
                     onConfirm(playlistName.text) // Pass the input to the onConfirm callback
                     onDismiss() // Close the dialog after confirming
                 },
@@ -100,6 +99,7 @@ fun PlaylistNameDialog(
 
 @Composable
 fun WorkoutNameDialog(
+
     onDismiss: () -> Unit,      // Called to dismiss the dialog
     onConfirm: (String) -> Unit // Called with the entered workout name when confirmed
 ) {
@@ -154,7 +154,8 @@ fun WorkoutNameDialog(
 // This component can be used in multiple screens by passing different lists of MenuOption items
 @Composable
 fun PlusButtonWithMenu(
-    menuOptions: List<MenuOption>  // A list of menu options to display in the dropdown
+    menuOptions: List<MenuOption>,  // A list of menu options to display in the dropdown
+    onPlaylistAdded: () -> Unit
 ) {
     // Local state to track whether the dropdown menu is currently expanded
     var menuExpanded by remember { mutableStateOf(false) }
@@ -162,7 +163,10 @@ fun PlusButtonWithMenu(
     var showPlaylistDialog by remember { mutableStateOf(false) }
     // State to control the visibility of the Workout dialog
     var showWorkoutDialog by remember { mutableStateOf(false) }
-
+    // Coroutine for running db methods without freezing UI
+    val coroutineScope = rememberCoroutineScope()
+    // Firestore object for db methods
+    val firestoreRepo = remember { FirestoreRepository() }
     // Capture the context once in this composable scope
     val context = LocalContext.current
 
@@ -242,14 +246,18 @@ fun PlusButtonWithMenu(
         // Display the PlaylistNameDialog when showPlaylistDialog is true
         if (showPlaylistDialog) {
             PlaylistNameDialog(
+                firestoreRepo = firestoreRepo,
+                coroutineScope = coroutineScope,
                 onDismiss = { showPlaylistDialog = false },
                 onConfirm = { playlistName ->
-                    /*
-
-                    Replace Toast with firestore integration to add the new playlist to database.
-
-
-                    */
+                    // Construct Playlist object using given name, generate UUID and then post empty playlist to firestore
+                    val newPlaylist = Classes.Playlist(
+                        id = UUID.randomUUID().toString(),
+                        name = playlistName,
+                        workouts = mutableListOf()
+                    )
+                    firestoreRepo.postPlaylist(newPlaylist)
+                    onPlaylistAdded()
                     Toast.makeText(context, "Playlist added: $playlistName", Toast.LENGTH_SHORT).show()
                 }
             )
