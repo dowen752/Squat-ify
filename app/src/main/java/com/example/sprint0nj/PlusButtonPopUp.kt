@@ -29,10 +29,7 @@ import android.widget.Toast
 
 import androidx.compose.ui.platform.LocalContext
 
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
+
 
 
 // Data class representing a single menu option
@@ -98,56 +95,103 @@ fun PlaylistNameDialog(
 }
 
 
+// Data class representing a workout entry with its configuration.
+data class WorkoutEntry(
+    val name: String,
+    val reps: Int,
+    val sets: Int
+)
+
 @Composable
-fun WorkoutNameDialog(
-    onDismiss: () -> Unit,      // Called to dismiss the dialog
-    onConfirm: (String) -> Unit // Called with the entered workout name when confirmed
+fun WorkoutSelectionDialog(
+    availableWorkouts: List<String>,  // This list should come from your Firebase query.
+    onDismiss: () -> Unit,
+    onConfirm: (WorkoutEntry) -> Unit
 ) {
-    var workoutName by remember { mutableStateOf(TextFieldValue("")) }
+    var selectedWorkout by remember { mutableStateOf("") }
+    var repsText by remember { mutableStateOf("") }
+    var setsText by remember { mutableStateOf("") }
+    var isDropdownExpanded by remember { mutableStateOf(false) }
 
     AlertDialog(
         onDismissRequest = { onDismiss() },
-        title = { Text("Workout Name:") }, // Title changed for workout
+        //title = { Text("Select Workout:") }, // Optional title if needed.
         text = {
-            // BasicTextField to allow the user to type in the workout name
-            BasicTextField(
-                value = workoutName,
-                onValueChange = { workoutName = it },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(8.dp)
-            )
+            Column {
+                // Dropdown for selecting a workout.
+                Box {
+                    Button(
+                        onClick = { isDropdownExpanded = true },
+                        modifier = Modifier.fillMaxWidth()
+
+
+                    ) {
+                        Text(
+                            text = if (selectedWorkout.isEmpty()) "Select workout" else selectedWorkout,
+                            fontSize = 16.sp
+
+                        )
+                    }
+                    DropdownMenu(
+                        expanded = isDropdownExpanded,
+                        onDismissRequest = { isDropdownExpanded = false }
+                    ) {
+                        availableWorkouts.forEach { workout ->
+                            DropdownMenuItem(
+                                text = { Text(workout) },
+                                onClick = {
+                                    selectedWorkout = workout
+                                    isDropdownExpanded = false
+                                }
+                            )
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+                // TextField for entering the number of Reps.
+                OutlinedTextField(
+                    value = repsText,
+                    onValueChange = { repsText = it },
+                    label = { Text("Reps") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                // TextField for entering the number of Sets.
+                OutlinedTextField(
+                    value = setsText,
+                    onValueChange = { setsText = it },
+                    label = { Text("Sets") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
         },
         confirmButton = {
-            // Confirm button returns the entered workout name
             Button(
                 onClick = {
-                    /*
-
-                    Replace Toast with firestore integration for workouts.
-
-
-                    */
-
-                    onConfirm(workoutName.text) // Pass the input to the onConfirm callback
-                    onDismiss() // Close the dialog after confirming
+                    // Ensure a workout is selected and convert reps/sets safely to integers.
+                    if (selectedWorkout.isNotEmpty()) {
+                        val reps = repsText.toIntOrNull() ?: 0
+                        val sets = setsText.toIntOrNull() ?: 0
+                        onConfirm(WorkoutEntry(selectedWorkout, reps, sets))
+                        onDismiss()
+                    }
                 },
                 colors = ButtonDefaults.buttonColors(containerColor = Color.Black)
             ) {
-                Text("Confirm")
+                Text("Confirm", color = Color.White)
             }
         },
         dismissButton = {
-            // Cancel Button for workout
             Button(
                 onClick = { onDismiss() },
                 colors = ButtonDefaults.buttonColors(containerColor = Color.Black)
             ) {
-                Text("Cancel")
+                Text("Cancel", color = Color.White)
             }
         }
     )
 }
+
 
 
 // Reusable composable for the plus button with a popup (dropdown) menu
@@ -193,20 +237,6 @@ fun PlusButtonWithMenu(
         }
 
 
-       /* For different button
-
-       FloatingActionButton(
-            onClick = { menuExpanded = true },
-            // Use your app's primary color for a standard look; adjust as needed.
-            containerColor = MaterialTheme.colorScheme.primary,
-            contentColor = Color.White,
-            modifier = Modifier.size(56.dp) // Optionally adjust the size if needed.
-        ) {
-            // Icon for the plus sign. This is the standard material icon for "add".
-            Icon(imageVector = Icons.Default.Add, contentDescription = "Add")
-        }
-        */
-
         // DropdownMenu:
         // This menu appears when menuExpanded is true and displays the list of menu options
         DropdownMenu(
@@ -226,14 +256,12 @@ fun PlusButtonWithMenu(
                             "Add Playlist" -> {
                                 showPlaylistDialog = true // Show the playlist dialog
                             }
-                            "Add Workout" -> {
-                                showWorkoutDialog = true // Show the workout dialog
-                            }
+                            // "Add Workout" will now simply call the provided callback.
                             else -> {
-                                option.onClick() // For other options, run their defined action
+                                option.onClick()
                             }
                         }
-                        menuExpanded = false // Close the dropdown menu after selection
+                        menuExpanded = false
                     }
                 )
             }
@@ -255,20 +283,16 @@ fun PlusButtonWithMenu(
             )
         }
 
-        // Display the WorkoutNameDialog when showWorkoutDialog is true
-        if (showWorkoutDialog) {
-            WorkoutNameDialog(
+        /*if (showWorkoutDialog) {
+            // Pass the workouts list from Firebase.
+            WorkoutSelectionDialog(
+                availableWorkouts = workoutsList.value,
                 onDismiss = { showWorkoutDialog = false },
-                onConfirm = { workoutName ->
-                    /*
-
-                    Replace Toast with firestore integration to add the new workout to database.
-
-
-                    */
-                    Toast.makeText(context, "Workout added: $workoutName", Toast.LENGTH_SHORT).show()
+                onConfirm = { workoutEntry ->
+                    // Replace the Toast with your Firestore integration code to add the workout.
+                    Toast.makeText(context, "Workout added: ${workoutEntry.name} with ${workoutEntry.reps} reps and ${workoutEntry.sets} sets", Toast.LENGTH_SHORT).show()
                 }
             )
-        }
+        }*/
     }
 }
