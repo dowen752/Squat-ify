@@ -27,16 +27,16 @@ import com.example.sprint0nj.data.FirestoreRepository
 import com.example.sprint0nj.data.Classes.Playlist
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
-
+// Import the separate MoreOptionsMenu composable from its own file.
+import com.example.sprint0nj.MoreOptionsMenu
 
 @Composable
 fun WorkoutScreen(navController: NavController, playlistId: String) {
     // This captures the current context which is used in the callbacks for popup
     val context = LocalContext.current
-    val firestoreRepository = remember { FirestoreRepository()}
+    val firestoreRepository = remember { FirestoreRepository() }
     val scope = rememberCoroutineScope()
     val playlist = remember { mutableStateOf<Playlist?>(null) }
-
 
     // 1. State for the list of available workouts from Firestore.
     val workoutsList = remember { mutableStateOf<List<String>>(emptyList()) }
@@ -57,7 +57,6 @@ fun WorkoutScreen(navController: NavController, playlistId: String) {
             }
         */
     }
-
 
     Column(
         modifier = Modifier
@@ -124,12 +123,8 @@ fun WorkoutScreen(navController: NavController, playlistId: String) {
             )
         }
 
-
-
         // Example list of workouts with #Reps and #Sets
         // In a real app, you might replace this with dynamic data
-
-
         playlist.value?.workouts?.forEach { workout ->
             Row(
                 modifier = Modifier
@@ -149,7 +144,9 @@ fun WorkoutScreen(navController: NavController, playlistId: String) {
 
                 // Text details
                 Column(
-                    modifier = Modifier.weight(1f, fill = false).padding(start = 16.dp)
+                    modifier = Modifier
+                        .weight(1f, fill = false)
+                        .padding(start = 16.dp)
                 ) {
                     Text(text = workout.title, fontSize = 16.sp, color = Color.Black)
                     Spacer(modifier = Modifier.height(4.dp))
@@ -159,6 +156,15 @@ fun WorkoutScreen(navController: NavController, playlistId: String) {
                         Text(text = "# Sets: ${workout.sets ?: "-"}", fontSize = 14.sp, color = Color.Black)
                     }
                 }
+                // "..." button with dropdown menu containing Share and Remove (placeholder)
+                MoreOptionsMenu(
+                    onShare = {
+                        Toast.makeText(context, "Share workout: ${workout.title}", Toast.LENGTH_SHORT).show()
+                    },
+                    onRemove = {
+                        Toast.makeText(context, "Remove clicked for workout: ${workout.title}", Toast.LENGTH_SHORT).show()
+                    }
+                )
             }
         }
 
@@ -172,11 +178,11 @@ fun WorkoutScreen(navController: NavController, playlistId: String) {
                 .padding(8.dp),
             horizontalArrangement = Arrangement.SpaceAround
         ) {
-        /*
-        {
-            Button(onClick = { navController.navigate("home") }) {
-                Text("Home")
-            }
+            /*
+            {
+                Button(onClick = { navController.navigate("home") }) {
+                    Text("Home")
+                }
             */
             Button(onClick = { navController.navigate("library") }) {
                 Text("Library")
