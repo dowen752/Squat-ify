@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -11,15 +12,16 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import android.widget.Toast // "Toast" is an Android API used to display the short confirmation messages after clicking the buttons
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.ui.platform.LocalContext
 import com.example.sprint0nj.data.FirestoreRepository
-
-
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import com.example.sprint0nj.MoreOptionsMenu
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -39,7 +41,6 @@ class MainActivity : ComponentActivity() {
 //        )
 //        firestoreRepository.postPlaylist(myPlaylist)
 
-
         setContent {
             AppNavHost()  // Show your NavHost here
         }
@@ -49,9 +50,12 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun LibraryScreen(navController: NavHostController) {
     val context = LocalContext.current
-    val firestoreRepository = remember {FirestoreRepository()}
-    val playlists by firestoreRepository.getPlaylistsFlow().collectAsState(initial = emptyList())
+    val firestoreRepository = remember { FirestoreRepository() }
+    val playlists = remember { mutableStateOf<List<Pair<String, String>>>(emptyList()) }
 
+    LaunchedEffect(Unit) {
+        playlists.value = firestoreRepository.fetchPlaylistSummaries()
+    }
 
     Column(
         modifier = Modifier
@@ -98,25 +102,45 @@ fun LibraryScreen(navController: NavHostController) {
                     }
                 )
             )
-
         }
 
-
         Spacer(modifier = Modifier.height(16.dp))
-
-        playlists.forEach { (id, name) ->
-            Button(      // Navigate to the WorkoutScreen route
-                onClick = {
-                    navController.navigate("workout/$id")
-                          },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(48.dp)
-                    .padding(vertical = 4.dp),
-                shape = RoundedCornerShape(8.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color.White)
-            ) {
-                Text(text = name, fontSize = 16.sp, color = Color.Black)
+        // LAZY COLUMN is our whole scrolling feature, this allows us to scroll when the list gets too big for the screen
+        LazyColumn {
+            items(playlists.value) { (id, name) ->
+                // We replaced the single Button with a Row that includes clickable text and a "..." dropdown
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp)
+                        .background(Color.White, RoundedCornerShape(8.dp))
+                        .padding(horizontal = 8.dp, vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    // Clicking the text navigates to the WorkoutScreen
+                    Text(
+                        text = name,
+                        fontSize = 16.sp,
+                        color = Color.Black,
+                        modifier = Modifier
+                            .weight(1f)
+                            .clickable {
+                                // Navigate to the WorkoutScreen route
+                                navController.navigate("workout/$id")
+                            }
+                    )
+                    // "..." button with dropdown menu containing Share and Remove (placeholder)
+                    MoreOptionsMenu(
+                        onShare = {
+                            Toast.makeText(context, "Share playlist: $name", Toast.LENGTH_SHORT).show()
+                        },
+                        onRemove = {
+                            // Placeholder: no real removal logic
+                            Toast.makeText(context, "Remove clicked for playlist: $name", Toast.LENGTH_SHORT).show()
+                        }
+                    )
+                }
             }
         }
     }
