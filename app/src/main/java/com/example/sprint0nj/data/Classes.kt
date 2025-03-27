@@ -2,7 +2,7 @@ package com.example.sprint0nj.data
 
 class Classes {
     data class Workout(
-        val id: Int = 0,
+        val id: String = "",
         var title: String = "",
         var duration: String? = null,
         var reps: Int? = null,
@@ -25,7 +25,7 @@ class Classes {
     }
     object WorkoutMods { // Using this instead of normal initialization means we can pass these values as parameters
         fun addWorkout(           // instead of needing to identify each value
-            id: Int,
+            id: String,
             title: String,
             duration: String? = null,
             reps: Int? = null,

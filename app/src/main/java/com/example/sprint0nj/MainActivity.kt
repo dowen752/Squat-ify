@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import android.widget.Toast // "Toast" is an Android API used to display the short confirmation messages after clicking the buttons
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.ui.platform.LocalContext
 import com.example.sprint0nj.data.FirestoreRepository
 import androidx.compose.foundation.lazy.LazyColumn
