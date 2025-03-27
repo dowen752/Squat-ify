@@ -18,8 +18,7 @@ import androidx.navigation.NavHostController
 import android.widget.Toast // "Toast" is an Android API used to display the short confirmation messages after clicking the buttons
 import androidx.compose.ui.platform.LocalContext
 import com.example.sprint0nj.data.FirestoreRepository
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.launch
+
 
 
 class MainActivity : ComponentActivity() {
@@ -50,31 +49,12 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun LibraryScreen(navController: NavHostController) {
     val context = LocalContext.current
-    // Object for firestore methods
     val firestoreRepository = remember {FirestoreRepository()}
-    // List of playlist ids and names
-    val playlists = remember { mutableStateListOf<Pair<String, String>>()}
-    // Allows for asynchronous execution
-    val coroutineScope = rememberCoroutineScope()
-    // Callback function passed to PlusButtonPopUp to allow page refreshing on playlist creation
-    val onPlaylistAdded: () -> Unit = {
-        coroutineScope.launch {
-            val updated = firestoreRepository.fetchPlaylistSummaries()
-            playlists.clear()
-            playlists.addAll(updated)
-        }
+    val playlists = remember { mutableStateOf<List<Pair<String, String>>>(emptyList())}
+
+    LaunchedEffect(Unit) {
+        playlists.value = firestoreRepository.fetchPlaylistSummaries()
     }
-    // Callback for page refreshing on workout creation
-//    val onWorkoutAdded: () -> Unit = {
-//        coroutineScope.launch {
-//            val updatedWorkouts = firestoreRepository.fetchWorkouts() // you'd need to implement this
-//            workouts.clear()
-//            workouts.addAll(updatedWorkouts)
-//        }
-//    }
-
-
-
 
     Column(
         modifier = Modifier
@@ -119,9 +99,7 @@ fun LibraryScreen(navController: NavHostController) {
                     MenuOption("Import Playlist") {
                         Toast.makeText(context, "Import Playlist clicked", Toast.LENGTH_SHORT).show()
                     }
-                ),
-                onPlaylistAdded = onPlaylistAdded
-
+                )
             )
 
         }
@@ -129,7 +107,7 @@ fun LibraryScreen(navController: NavHostController) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        playlists.forEach { (id, name) ->
+        playlists.value.forEach { (id, name) ->
             Button(      // Navigate to the WorkoutScreen route
                 onClick = {
                     navController.navigate("workout/$id")
