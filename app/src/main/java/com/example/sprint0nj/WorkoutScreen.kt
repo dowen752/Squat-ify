@@ -1,5 +1,6 @@
 package com.example.sprint0nj
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -17,6 +18,7 @@ import androidx.navigation.NavController
 import androidx.compose.ui.platform.LocalContext
 import android.widget.Toast // "Toast" is an Android API used to display the short confirmation messages after clicking the buttons
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -24,6 +26,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.rememberNavController
 import com.example.sprint0nj.data.FirestoreRepository
 import com.example.sprint0nj.data.Classes.Playlist
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+// Import the separate MoreOptionsMenu composable from its own file.
+import com.example.sprint0nj.MoreOptionsMenu
+import com.example.sprint0nj.data.Classes.Workout
+
 
 @Composable
 fun WorkoutScreen(navController: NavController, playlistId: String) {
@@ -32,10 +40,41 @@ fun WorkoutScreen(navController: NavController, playlistId: String) {
     val firestoreRepository = remember { FirestoreRepository()}
     val scope = rememberCoroutineScope()
     val playlist = remember { mutableStateOf<Playlist?>(null) }
-    LaunchedEffect(playlistId) {
-        playlist.value = firestoreRepository.fetchPlaylist(playlistId)
-    }
 
+
+    // 1. State for the list of available workouts from Firestore.
+    val workoutsList = remember { mutableStateOf<List<Workout>>(emptyList()) }
+
+    // 2. State to control the visibility of the workout selection dialog.
+    var showWorkoutSelectionDialog by remember { mutableStateOf(false) }
+
+    // 3. Fetch both the playlist and workouts from Firestore.
+    LaunchedEffect(playlistId) {
+        Log.d("WorkoutScreen", "🎯 Attempting to fetch playlist with ID: $playlistId")
+
+        try {
+            val result = firestoreRepository.fetchPlaylist(playlistId)
+            if (result != null) {
+                Log.d("WorkoutScreen", "Playlist loaded: ${result.name}")
+                playlist.value = result
+            } else {
+                Log.e("WorkoutScreen", "Playlist was null (not found in Firestore?)")
+            }
+        } catch (e: Exception) {
+            Log.e("WorkoutScreen", "Exception during fetch: ${e.message}")
+            e.printStackTrace()
+        }
+
+        // Here is where you fetch the workouts list from Firestore.
+        // Uncomment and replace with your actual Firestore query.
+        /*
+        FirebaseFirestore.getInstance().collection("workouts")
+            .get()
+            .addOnSuccessListener { snapshot ->
+                workoutsList.value = snapshot.documents.mapNotNull { it.getString("name") }
+            }
+        */
+    }
 
     Column(
         modifier = Modifier
@@ -65,27 +104,45 @@ fun WorkoutScreen(navController: NavController, playlistId: String) {
                 color = Color.White
             )
 
-            // Call the reusable plus button
-            PlusButtonWithMenu(
-                menuOptions = listOf(
-                    // First menu option with the title "Add Workout"
-                    // When clicked, a Toast message is displayed
-                    MenuOption("Add Workout") {
-                        Toast.makeText(context, "Add Workout clicked", Toast.LENGTH_SHORT).show()
-                    },
-                    // Second menu option with the title "Import Workout" (probably could use a different title)
-                    // When clicked, a Toast message is displayed
-                    MenuOption("Import Workout") {
-                        Toast.makeText(context, "Import Workout clicked", Toast.LENGTH_SHORT).show()
-                    }
+            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.TopEnd) {
+                // Use PlusButtonWithMenu without referencing workouts state.
+                PlusButtonWithMenu(
+                    menuOptions = listOf(
+                        MenuOption("Add Workout") {
+                            // This callback is handled here:
+                            showWorkoutSelectionDialog = true
+                            // debug Toast:
+                            //Toast.makeText(context, "Add Workout callback triggered", Toast.LENGTH_SHORT).show()
+                        },
+                        MenuOption("Import Workout") {
+                            Toast.makeText(context, "Import Workout clicked", Toast.LENGTH_SHORT).show()
+                        }
+                    )
                 )
+            }
+        }
+
+        // For list of workouts:
+
+        // Display the WorkoutSelectionDialog if the state is true.
+        if (showWorkoutSelectionDialog) {
+            WorkoutSelectionDialog(
+                playlist = playlist.value!!,
+                onDismiss = { showWorkoutSelectionDialog = false },
+                onConfirm = { workoutEntry ->
+                    // Process the confirmed workout entry here.
+                    Toast.makeText(
+                        context,
+                        "Workout added: ${workoutEntry.name} with ${workoutEntry.reps} reps and ${workoutEntry.sets} sets",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    showWorkoutSelectionDialog = false
+                }
             )
         }
 
         // Example list of workouts with #Reps and #Sets
         // In a real app, you might replace this with dynamic data
-
-
         playlist.value?.workouts?.forEach { workout ->
             Row(
                 modifier = Modifier
@@ -105,7 +162,9 @@ fun WorkoutScreen(navController: NavController, playlistId: String) {
 
                 // Text details
                 Column(
-                    modifier = Modifier.weight(1f, fill = false).padding(start = 16.dp)
+                    modifier = Modifier
+                        .weight(1f, fill = false)
+                        .padding(start = 16.dp)
                 ) {
                     Text(text = workout.title, fontSize = 16.sp, color = Color.Black)
                     Spacer(modifier = Modifier.height(4.dp))
@@ -115,6 +174,15 @@ fun WorkoutScreen(navController: NavController, playlistId: String) {
                         Text(text = "# Sets: ${workout.sets ?: "-"}", fontSize = 14.sp, color = Color.Black)
                     }
                 }
+                // "..." button with dropdown menu containing Share and Remove (placeholder)
+                MoreOptionsMenu(
+                    onShare = {
+                        Toast.makeText(context, "Share workout: ${workout.title}", Toast.LENGTH_SHORT).show()
+                    },
+                    onRemove = {
+                        Toast.makeText(context, "Remove clicked for workout: ${workout.title}", Toast.LENGTH_SHORT).show()
+                    }
+                )
             }
         }
 
@@ -128,11 +196,11 @@ fun WorkoutScreen(navController: NavController, playlistId: String) {
                 .padding(8.dp),
             horizontalArrangement = Arrangement.SpaceAround
         ) {
-        /*
-        {
-            Button(onClick = { navController.navigate("home") }) {
-                Text("Home")
-            }
+            /*
+            {
+                Button(onClick = { navController.navigate("home") }) {
+                    Text("Home")
+                }
             */
             Button(onClick = { navController.navigate("library") }) {
                 Text("Library")
