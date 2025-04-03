@@ -138,6 +138,10 @@ fun LibraryScreen(navController: NavHostController) {
                         onRemove = {
                             // Placeholder: no real removal logic
                             Toast.makeText(context, "Remove clicked for playlist: $name", Toast.LENGTH_SHORT).show()
+                        },
+                        onEdit = {
+                            // Placeholder: no real removal logic
+                            Toast.makeText(context, "Edit clicked: $name", Toast.LENGTH_SHORT).show()
                         }
                     )
                 }

@@ -57,7 +57,7 @@ fun WorkoutScreen(navController: NavController, playlistId: String) {
 
     // 3. Fetch both the playlist and workouts from Firestore.
     LaunchedEffect(playlistId) {
-        Log.d("WorkoutScreen", "🎯 Attempting to fetch playlist with ID: $playlistId")
+        Log.d("WorkoutScreen", " Attempting to fetch playlist with ID: $playlistId")
         localFetchPlaylist()
 
         // Here is where you fetch the workouts list from Firestore.
@@ -170,13 +170,16 @@ fun WorkoutScreen(navController: NavController, playlistId: String) {
                         Text(text = "# Sets: ${workout.sets ?: "-"}", fontSize = 14.sp, color = Color.Black)
                     }
                 }
-                // "..." button with dropdown menu containing Share and Remove (placeholder)
+                // "..." button with dropdown menu containing Share and Remove (placeholder) // edit here
                 MoreOptionsMenu(
                     onShare = {
                         Toast.makeText(context, "Share workout: ${workout.title}", Toast.LENGTH_SHORT).show()
                     },
                     onRemove = {
                         Toast.makeText(context, "Remove clicked for workout: ${workout.title}", Toast.LENGTH_SHORT).show()
+                    },
+                    onEdit = {
+                        Toast.makeText(context, "Edit clicked for workout: ${workout.title}", Toast.LENGTH_SHORT).show()
                     }
                 )
             }
