@@ -48,18 +48,6 @@ class FirestoreRepository {
         }
     }
 
-
-
-    // Fetch all playlist IDs from firestore collection
-    suspend fun fetchPlaylistIds(): List<String> {
-        return try {
-            val snapshot = playlistsCollection.get().await()
-            snapshot.documents.mapNotNull { it.id } // Extract document IDs
-        } catch (e: Exception) {
-            emptyList() // Return empty list if there's an error
-        }
-    }
-
     
     // Removes given workout from playlist in firestore
     fun removeWorkout(
@@ -73,7 +61,7 @@ class FirestoreRepository {
         playlistRef.get().addOnSuccessListener { document ->
             if (document != null && document.exists()) {
                 val playlist = document.toObject(Playlist::class.java)
-                val updatedWorkouts = playlist.workouts.filter { it.id != workoutId }
+                val updatedWorkouts = playlist?.workouts?.filter { it.id != workoutId }
                     
                 playlistRef.update("workouts", updatedWorkouts)
                     .addOnSuccessListener {
