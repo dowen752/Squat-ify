@@ -24,6 +24,8 @@ class FirestoreRepository {
                 Log.d("FirestoreRepo", "Error posting playlist '${playlist.name}': ${exception.message}")
             }
     }
+
+    // Fetches playlist by specified id. Used for displaying individual workout pages
     suspend fun fetchPlaylist(playlistId: String): Playlist? {
         return try {
             Log.d("PlaylistId", playlistId)
@@ -37,6 +39,8 @@ class FirestoreRepository {
             null
         }
     }
+
+    // Maps firestore workout document to Classes.Workout object
     suspend fun fetchWorkouts(): List<Workout> {
         val snapshot = db.collection("Workouts").get().await()
         return snapshot.documents.mapNotNull { doc ->
@@ -56,6 +60,8 @@ class FirestoreRepository {
         }
     }
 
+    
+    // Removes given workout from playlist in firestore
     fun removeWorkout(
         playlistId: String,
         workoutId: String,
@@ -67,29 +73,23 @@ class FirestoreRepository {
         playlistRef.get().addOnSuccessListener { document ->
             if (document != null && document.exists()) {
                 val playlist = document.toObject(Playlist::class.java)
-                if (playlist != null) {
-                    val updatedWorkouts = playlist.workouts.filter { it.id != workoutId }
-
-                    playlistRef.update("workouts", updatedWorkouts)
-                        .addOnSuccessListener {
-                            Log.d("Firestore", "Workout removed successfully")
-                            onSuccess()
-                        }
-                        .addOnFailureListener { e ->
-                            Log.e("Firestore", "Failed to update playlist", e)
-                            onFailure(e)
-                        }
-                }
-            } else {
-                onFailure(Exception("Playlist not found"))
+                val updatedWorkouts = playlist.workouts.filter { it.id != workoutId }
+                    
+                playlistRef.update("workouts", updatedWorkouts)
+                    .addOnSuccessListener {
+                        Log.d("Firestore", "Workout removed successfully")
+                        onSuccess()
+                    }
+                    .addOnFailureListener { e ->
+                        Log.e("Firestore", "Failed to update playlist", e)
+                        onFailure(e)
+                    }
             }
-        }.addOnFailureListener { e ->
-            onFailure(e)
         }
     }
 
 
-
+    // Fetching pair of all playlist ids and names, for displaying in library screen
     suspend fun fetchPlaylistSummaries(): List<Pair<String, String>> {
         val playlistNames = playlistsCollection.get().await()
         return playlistNames.documents.map { document ->
