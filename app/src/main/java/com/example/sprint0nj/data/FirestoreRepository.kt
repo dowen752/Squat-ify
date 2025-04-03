@@ -56,6 +56,40 @@ class FirestoreRepository {
         }
     }
 
+    fun removeWorkout(
+        playlistId: String,
+        workoutId: String,
+        onSuccess: () -> Unit = {},
+        onFailure: (Exception) -> Unit = {}
+    ) {
+        val playlistRef = playlistsCollection.document(playlistId)
+
+        playlistRef.get().addOnSuccessListener { document ->
+            if (document != null && document.exists()) {
+                val playlist = document.toObject(Playlist::class.java)
+                if (playlist != null) {
+                    val updatedWorkouts = playlist.workouts.filter { it.id != workoutId }
+
+                    playlistRef.update("workouts", updatedWorkouts)
+                        .addOnSuccessListener {
+                            Log.d("Firestore", "Workout removed successfully")
+                            onSuccess()
+                        }
+                        .addOnFailureListener { e ->
+                            Log.e("Firestore", "Failed to update playlist", e)
+                            onFailure(e)
+                        }
+                }
+            } else {
+                onFailure(Exception("Playlist not found"))
+            }
+        }.addOnFailureListener { e ->
+            onFailure(e)
+        }
+    }
+
+
+
     suspend fun fetchPlaylistSummaries(): List<Pair<String, String>> {
         val playlistNames = playlistsCollection.get().await()
         return playlistNames.documents.map { document ->

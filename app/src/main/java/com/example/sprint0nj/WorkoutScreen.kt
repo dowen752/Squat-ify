@@ -176,8 +176,19 @@ fun WorkoutScreen(navController: NavController, playlistId: String) {
                         Toast.makeText(context, "Share workout: ${workout.title}", Toast.LENGTH_SHORT).show()
                     },
                     onRemove = {
-                        Toast.makeText(context, "Remove clicked for workout: ${workout.title}", Toast.LENGTH_SHORT).show()
-                    },
+                        firestoreRepository.removeWorkout(
+                            playlistId = playlistId,
+                            workoutId = workout.id,
+                            onSuccess = {
+                                localFetchPlaylist()
+                                Toast.makeText(context, "Removed: ${workout.title}", Toast.LENGTH_SHORT).show()
+                            },
+                            onFailure = {
+                                Toast.makeText(context, "Failed to remove: ${workout.title}", Toast.LENGTH_SHORT).show()
+                            }
+                        )
+                    }
+                    ,
                     onEdit = {
                         Toast.makeText(context, "Edit clicked for workout: ${workout.title}", Toast.LENGTH_SHORT).show()
                     }
