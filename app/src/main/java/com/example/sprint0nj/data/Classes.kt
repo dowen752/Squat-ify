@@ -7,7 +7,9 @@ class Classes {
         var duration: String? = null,
         var reps: Int? = null,
         var sets: Int? = null,
-        var description: String = ""
+        var description: String = "",
+        var target: String = "",
+        var tutorialLink: String = ""
     )
 
     data class Playlist(
