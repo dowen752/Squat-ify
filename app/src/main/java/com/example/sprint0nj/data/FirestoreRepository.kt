@@ -99,25 +99,4 @@ class FirestoreRepository {
         }
     }
 
-    fun getPlaylistsFlow(): Flow<List<Pair<String, String>>> = callbackFlow {
-        val listenerRegistration = db.collection("playlists")
-            .addSnapshotListener { snapshot, error ->
-                if (error != null || snapshot == null) {
-                    close(error ?: Exception("Snapshot is null"))
-                    return@addSnapshotListener
-                }
-
-                val summaries = snapshot.documents.mapNotNull {
-                    val id = it.id
-                    val name = it.getString("name")
-                    if (name != null) id to name else null
-                }
-
-                trySend(summaries)
-            }
-
-        awaitClose { listenerRegistration.remove() }
-    }
-
-
 }
