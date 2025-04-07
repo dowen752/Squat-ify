@@ -27,7 +27,8 @@ import androidx.compose.ui.unit.dp
 fun MoreOptionsMenu(
     onShare: () -> Unit,
     onRemove: () -> Unit,
-    onEdit: () -> Unit // New parameter for "Edit" option
+    onEdit: () -> Unit, // New parameter for "Edit" option
+    onTutorial: (() -> Unit)? = null  // New optional parameter
 ) {
     // State to track whether the dropdown menu is expanded
     var expanded by remember { mutableStateOf(false) }
@@ -59,6 +60,17 @@ fun MoreOptionsMenu(
                     onEdit()
                 }
             )
+
+            // Conditionally add "Tutorial" option if a callback is provided
+            if (onTutorial != null) {
+                DropdownMenuItem(
+                    text = { Text("Tutorial") },
+                    onClick = {
+                        expanded = false
+                        onTutorial()
+                    }
+                )
+            }
 
             // Option to Remove (placeholder only; no real removal logic)
             DropdownMenuItem(

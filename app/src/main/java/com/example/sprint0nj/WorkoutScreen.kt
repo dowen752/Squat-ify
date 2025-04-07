@@ -191,6 +191,10 @@ fun WorkoutScreen(navController: NavController, playlistId: String) {
                     ,
                     onEdit = {
                         Toast.makeText(context, "Edit clicked for workout: ${workout.title}", Toast.LENGTH_SHORT).show()
+                    },
+
+                    onTutorial = {
+                        navController.navigate("tutorial")
                     }
                 )
             }
