@@ -47,8 +47,12 @@ fun PlaylistNameDialog(
     onDismiss: () -> Unit,      // Called to dismiss the dialog
     onConfirm: (String) -> Unit // Called with the entered playlist name when confirmed
 ) {
+    val context = LocalContext.current
     var playlistName by remember { mutableStateOf(TextFieldValue("")) }
     val firestoreRepository = remember { FirestoreRepository() }
+    var selectedUserId = "4dz7wUNpKHI0Br9lSg9o" // Will need to be updated to allow for multiple
+                                                // users instead of hardcoding
+
     AlertDialog(
         onDismissRequest = { onDismiss() },
         title = { Text("Playlist Name:") },
@@ -70,7 +74,15 @@ fun PlaylistNameDialog(
                         id = UUID.randomUUID().toString(),
                         name = playlistName.text
                     )
-                    firestoreRepository.postPlaylist(playlist)
+                    firestoreRepository.postPlaylist(
+                        playlist = playlist,
+                        userId = selectedUserId,
+                        onSuccess = {
+                            val name = playlist.name
+                            Toast.makeText(context, "Added playlist: $name", Toast.LENGTH_SHORT).show()
+                        }
+                    )
+
                     onConfirm(playlistName.text) // Pass the input to the onConfirm callback
                     onDismiss() // Close the dialog after confirming
                 },
@@ -117,6 +129,9 @@ fun WorkoutSelectionDialog(
     val availableWorkouts = remember { mutableStateOf<List<Workout>>(emptyList())}
     val firestoreRepository = remember {FirestoreRepository()}
 //    val playlist = remember { mutableStateOf<Playlist?>(null) }
+
+    var selectedUserId = "4dz7wUNpKHI0Br9lSg9o" // Will need to be updated to allow for multiple
+                                                // users instead of hardcoding
 
     LaunchedEffect(Unit){
         availableWorkouts.value = firestoreRepository.fetchWorkouts()
@@ -184,7 +199,7 @@ fun WorkoutSelectionDialog(
                         val reps = repsText.toIntOrNull() ?: 0
                         val sets = setsText.toIntOrNull() ?: 0
                         playlist.workouts.add(Workout(UUID.randomUUID().toString(), selectedWorkout, null, reps, sets, ""))
-                        firestoreRepository.postPlaylist(playlist)
+                        firestoreRepository.postPlaylist(playlist = playlist, userId = selectedUserId)
                         onConfirm(WorkoutEntry(selectedWorkout, reps, sets))
                         onDismiss()
                     }

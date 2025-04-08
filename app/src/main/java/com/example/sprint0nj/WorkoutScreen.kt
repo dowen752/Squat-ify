@@ -182,9 +182,6 @@ fun WorkoutScreen(navController: NavController, playlistId: String) {
                             onSuccess = {
                                 localFetchPlaylist()
                                 Toast.makeText(context, "Removed: ${workout.title}", Toast.LENGTH_SHORT).show()
-                            },
-                            onFailure = {
-                                Toast.makeText(context, "Failed to remove: ${workout.title}", Toast.LENGTH_SHORT).show()
                             }
                         )
                     }
