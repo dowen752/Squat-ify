@@ -144,7 +144,7 @@ fun LibraryScreen(navController: NavHostController) {
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = 4.dp)
-                        .background(Color.White, RoundedCornerShape(8.dp))
+                        .background(Color(0xFF212121), RoundedCornerShape(8.dp))
                         .padding(horizontal = 8.dp, vertical = 4.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
@@ -153,7 +153,7 @@ fun LibraryScreen(navController: NavHostController) {
                     Text(
                         text = name,
                         fontSize = 16.sp,
-                        color = Color.Black,
+                        color = Color.White,
                         modifier = Modifier
                             .weight(1f)
                             .clickable {
