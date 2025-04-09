@@ -336,7 +336,7 @@ fun PlusButtonWithMenu(
             onClick = { menuExpanded = true }, // When clicked, set menuExpanded to true to open the menu
             modifier = Modifier.size(56.dp),     // Set the fixed size of the button (can be adjusted).
             shape = RoundedCornerShape(12.dp),   // Rounded corners. Can change the dp value to alter curvature
-            colors = ButtonDefaults.buttonColors(containerColor = Color.White), // Button background color
+            colors = ButtonDefaults.buttonColors(containerColor = Color.Black), // Button background color
             contentPadding = PaddingValues(0.dp)  // Remove any internal padding for a tighter layout
         ) {
 
@@ -347,7 +347,7 @@ fun PlusButtonWithMenu(
             ) {
                 // Text displaying the plus sign
                 // Can adjust fontSize and fontWeight for customization
-                Text("+", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                Text("+", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = Color.White)
             }
         }
 

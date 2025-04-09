@@ -14,6 +14,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 
@@ -35,13 +36,13 @@ fun MoreOptionsMenu(
 
     Box(modifier = Modifier.wrapContentSize(Alignment.TopEnd)) {
         IconButton(onClick = { expanded = true }) {
-            Text(text = "...", fontSize = 20.sp)
+            Text(text = "...", fontSize = 20.sp , color = Color.White)
         }
         // The DropdownMenu is displayed when "expanded" is true
         DropdownMenu(
             expanded = expanded,
             onDismissRequest = { expanded = false },
-            // Can adjust the offset to control the dropdown's position relative to the button
+            // Can adjust the offset to control the dropdowns position relative to the button
             offset = DpOffset((-10).dp, (-6).dp)
         ) {
             // Option to Share
