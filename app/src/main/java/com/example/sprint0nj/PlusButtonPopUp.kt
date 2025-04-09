@@ -135,7 +135,7 @@ fun WorkoutSelectionDialog(
     var selectedTargetMuscle by remember { mutableStateOf("") }
     var isTargetMuscleDropdownExpanded by remember { mutableStateOf(false) }
     // A sample list of available target muscles
-    val availableMuscles = remember { mutableStateOf(listOf("Chest", "Back", "Legs", "Arms", "Shoulders", "Abs")) }
+    val availableMuscles = remember { mutableStateOf(listOf("Chest", "Back", "Legs", "Biceps", "Triceps", "Shoulders", "Abs")) }
 
 
     var isDropdownExpanded by remember { mutableStateOf(false) }
@@ -145,6 +145,17 @@ fun WorkoutSelectionDialog(
 
     var selectedUserId = "4dz7wUNpKHI0Br9lSg9o" // Will need to be updated to allow for multiple
                                                 // users instead of hardcoding
+
+    // Filters firestore list for targeted muscle
+    val filteredWorkouts by remember(selectedTargetMuscle, availableWorkouts.value) {
+        derivedStateOf {
+            if (selectedTargetMuscle.isEmpty()) {
+                availableWorkouts.value
+            } else {
+                availableWorkouts.value.filter { it.target.equals(selectedTargetMuscle, ignoreCase = true) }
+            }
+        }
+    }
 
     LaunchedEffect(Unit){
         availableWorkouts.value = firestoreRepository.fetchWorkouts()
@@ -173,7 +184,7 @@ fun WorkoutSelectionDialog(
                         expanded = isDropdownExpanded,
                         onDismissRequest = { isDropdownExpanded = false }
                     ) {
-                        availableWorkouts.value.forEach { workout ->
+                        filteredWorkouts.forEach { workout ->
                             DropdownMenuItem(
                                 text = { Text(workout.title) },
                                 onClick = {
