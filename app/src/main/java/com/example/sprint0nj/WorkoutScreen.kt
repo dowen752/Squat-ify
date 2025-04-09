@@ -42,6 +42,9 @@ fun WorkoutScreen(navController: NavController, playlistId: String) {
     val scope = rememberCoroutineScope()
     val playlist = remember { mutableStateOf<Playlist?>(null) }
 
+    // State to hold the workout entry for editing; if null, we're in add mode
+    var workoutToEdit by remember { mutableStateOf<WorkoutEntry?>(null) }
+
     val localFetchPlaylist = {
         scope.launch{
             val updated = firestoreRepository.fetchPlaylist(playlistId)
@@ -49,26 +52,17 @@ fun WorkoutScreen(navController: NavController, playlistId: String) {
         }
     }
 
-    // 1. State for the list of available workouts from Firestore.
+    // State for the list of available workouts from Firestore.
     val workoutsList = remember { mutableStateOf<List<Workout>>(emptyList()) }
 
-    // 2. State to control the visibility of the workout selection dialog.
+    // State to control the visibility of the workout selection dialog.
     var showWorkoutSelectionDialog by remember { mutableStateOf(false) }
 
-    // 3. Fetch both the playlist and workouts from Firestore.
+    // Fetch both the playlist and workouts from Firestore.
     LaunchedEffect(playlistId) {
         Log.d("WorkoutScreen", " Attempting to fetch playlist with ID: $playlistId")
         localFetchPlaylist()
 
-        // Here is where you fetch the workouts list from Firestore.
-        // Uncomment and replace with your actual Firestore query.
-        /*
-        FirebaseFirestore.getInstance().collection("workouts")
-            .get()
-            .addOnSuccessListener { snapshot ->
-                workoutsList.value = snapshot.documents.mapNotNull { it.getString("name") }
-            }
-        */
     }
 
     Column(
@@ -126,15 +120,20 @@ fun WorkoutScreen(navController: NavController, playlistId: String) {
         if (showWorkoutSelectionDialog) {
             WorkoutSelectionDialog(
                 playlist = playlist.value!!,
-                onDismiss = { showWorkoutSelectionDialog = false },
+                initialWorkout = workoutToEdit, // Pass the data if present—dialog will be in edit mode.
+                onDismiss = {
+                    showWorkoutSelectionDialog = false
+                    workoutToEdit = null
+                },
                 onConfirm = { workoutEntry ->
-                    // Process the confirmed workout entry here.
+                    // Here you update your UI, and later add Firebase logic.
                     Toast.makeText(
                         context,
-                        "Workout added: ${workoutEntry.name} with ${workoutEntry.reps} reps and ${workoutEntry.sets} sets",
+                        "Workout updated: ${workoutEntry.name} with ${workoutEntry.reps} reps and ${workoutEntry.sets} sets",
                         Toast.LENGTH_SHORT
                     ).show()
                     showWorkoutSelectionDialog = false
+                    workoutToEdit = null
                 }
             )
             localFetchPlaylist()
@@ -190,7 +189,14 @@ fun WorkoutScreen(navController: NavController, playlistId: String) {
                     }
                     ,
                     onEdit = {
-                        Toast.makeText(context, "Edit clicked for workout: ${workout.title}", Toast.LENGTH_SHORT).show()
+                        // Convert the workout data into a WorkoutEntry structure.
+                        workoutToEdit = WorkoutEntry(
+                            name = workout.title,
+                            reps = workout.reps ?: 0,
+                            sets = workout.sets ?: 0
+                        )
+                        // Set the flag to show the dialog.
+                        showWorkoutSelectionDialog = true
                     },
 
                     onTutorial = {

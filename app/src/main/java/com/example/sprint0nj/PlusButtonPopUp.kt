@@ -123,12 +123,21 @@ data class WorkoutEntry(
 @Composable
 fun WorkoutSelectionDialog(
     playlist: Playlist,
+    initialWorkout: WorkoutEntry? = null,
     onDismiss: () -> Unit,
     onConfirm: (WorkoutEntry) -> Unit
 ) {
     var selectedWorkout by remember { mutableStateOf("") }
     var repsText by remember { mutableStateOf("") }
     var setsText by remember { mutableStateOf("") }
+
+    // State for the Target Muscle button
+    var selectedTargetMuscle by remember { mutableStateOf("") }
+    var isTargetMuscleDropdownExpanded by remember { mutableStateOf(false) }
+    // A sample list of available target muscles
+    val availableMuscles = remember { mutableStateOf(listOf("Chest", "Back", "Legs", "Arms", "Shoulders", "Abs")) }
+
+
     var isDropdownExpanded by remember { mutableStateOf(false) }
     val availableWorkouts = remember { mutableStateOf<List<Workout>>(emptyList())}
     val firestoreRepository = remember {FirestoreRepository()}
@@ -178,6 +187,34 @@ fun WorkoutSelectionDialog(
                     }
                 }
                 Spacer(modifier = Modifier.height(8.dp))
+                // "Target Muscle" Button and Dropdown
+
+                Box {
+                    Button(
+                        onClick = { isTargetMuscleDropdownExpanded = true },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            text = if (selectedTargetMuscle.isEmpty()) "Target Muscle" else selectedTargetMuscle,
+                            fontSize = 16.sp
+                        )
+                    }
+                    DropdownMenu(
+                        expanded = isTargetMuscleDropdownExpanded,
+                        onDismissRequest = { isTargetMuscleDropdownExpanded = false }
+                    ) {
+                        availableMuscles.value.forEach { muscle ->
+                            DropdownMenuItem(
+                                text = { Text(muscle) },
+                                onClick = {
+                                    selectedTargetMuscle = muscle
+                                    isTargetMuscleDropdownExpanded = false
+                                }
+                            )
+                        }
+                    }
+                }
+
                 // TextField for entering the number of Reps.
                 OutlinedTextField(
                     value = repsText,
@@ -202,12 +239,54 @@ fun WorkoutSelectionDialog(
                     if (selectedWorkout.isNotEmpty()) {
                         val reps = repsText.toIntOrNull() ?: 0
                         val sets = setsText.toIntOrNull() ?: 0
-                        playlist.workouts.add(Workout(UUID.randomUUID().toString(), selectedWorkout, null, reps, sets, ""))
-                        firestoreRepository.postPlaylist(
-                            playlist = playlist,
-                            userId = selectedUserId
+
+                        // Create a WorkoutEntry from the inputs
+                        val workoutEntry = WorkoutEntry(selectedWorkout, reps, sets) // maybe we could include target muscle here
+
+                        if (initialWorkout == null) {
+                            // Add operation: add a new workout
+                            playlist.workouts.add(
+                                Workout(
+                                    id = UUID.randomUUID().toString(),
+                                    title = selectedWorkout,
+                                    reps = reps,
+                                    sets = sets,
+                                    description = ""
+                                )
                             )
-                        onConfirm(WorkoutEntry(selectedWorkout, reps, sets))
+                        } else {
+                            // Edit operation: update the existing workout
+
+                            // using the initialWorkout.name as a placeholder for identifying the workout
+                            val index = playlist.workouts.indexOfFirst { it.title == initialWorkout.name }
+                            if (index != -1) {
+                                // update the found workout while keeping its ID
+                                playlist.workouts[index] = Workout(
+                                    id = playlist.workouts[index].id,
+                                    title = selectedWorkout,
+                                    reps = reps,
+                                    sets = sets,
+                                    description = ""
+                                )
+                            } else {
+                                // if not found, add it
+                                playlist.workouts.add(
+                                    Workout(
+                                        id = UUID.randomUUID().toString(),
+                                        title = selectedWorkout,
+                                        reps = reps,
+                                        sets = sets,
+                                        description = ""
+                                    )
+                                )
+                            }
+                        }
+
+                        firestoreRepository.postPlaylist(
+                    playlist = playlist,
+                    userId = selectedUserId
+                )
+                        onConfirm(workoutEntry)
                         onDismiss()
                     }
                 },
