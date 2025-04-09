@@ -22,6 +22,7 @@ import com.example.sprint0nj.data.FirestoreRepository
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import com.example.sprint0nj.MoreOptionsMenu
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -50,11 +51,37 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun LibraryScreen(navController: NavHostController) {
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     val firestoreRepository = remember { FirestoreRepository() }
     val playlists = remember { mutableStateOf<List<Pair<String, String>>>(emptyList()) }
+    var selectedUserId = "4dz7wUNpKHI0Br9lSg9o" // Will need to be updated to allow for multiple
+                                                // users instead of hardcoding
+
+
+    val localRefreshPlaylists = {
+        if (selectedUserId != null) {
+            scope.launch {
+                val updated = firestoreRepository.fetchPlaylistSummaries(
+                    selectedUserId,
+                    onResult = {updated->
+                        playlists.value = updated
+                    }
+                )
+            }
+        }
+    }
+//    val localFetchPlaylists = {
+//        scope.launch{
+//            val updated = firestoreRepository.fetchPlaylist(playlistId)
+//            playlist.value = updated
+//        }
+//    }
 
     LaunchedEffect(Unit) {
-        playlists.value = firestoreRepository.fetchPlaylistSummaries()
+        firestoreRepository.fetchPlaylistSummaries(userId = selectedUserId){ summaries ->
+            playlists.value = summaries
+        }
+
     }
 
     Column(
@@ -93,6 +120,7 @@ fun LibraryScreen(navController: NavHostController) {
                     // First menu option with the title "Add Playlist"
                     // When clicked, a Toast message is displayed
                     MenuOption("Add Playlist") {
+
                         //Toast.makeText(context, "Add Playlist clicked", Toast.LENGTH_SHORT).show()
                     },
                     // Second menu option with the title "Import Playlist"
@@ -100,7 +128,10 @@ fun LibraryScreen(navController: NavHostController) {
                     MenuOption("Import Playlist") {
                         Toast.makeText(context, "Import Playlist clicked", Toast.LENGTH_SHORT).show()
                     }
-                )
+                ),
+                onPlaylistAdded = {
+                    localRefreshPlaylists()
+                }
             )
         }
 
@@ -136,8 +167,14 @@ fun LibraryScreen(navController: NavHostController) {
                             Toast.makeText(context, "Share playlist: $name", Toast.LENGTH_SHORT).show()
                         },
                         onRemove = {
-                            // Placeholder: no real removal logic
-                            Toast.makeText(context, "Remove clicked for playlist: $name", Toast.LENGTH_SHORT).show()
+                            firestoreRepository.removePlaylist(
+                                userId = selectedUserId,
+                                playlistId = id,
+                                onSuccess = {
+                                    localRefreshPlaylists()
+                                    Toast.makeText(context, "Remove clicked for playlist: $name", Toast.LENGTH_SHORT).show()
+                                }
+                            )
                         },
                         onEdit = {
                             // Placeholder: no real removal logic

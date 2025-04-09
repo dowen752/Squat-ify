@@ -3,6 +3,8 @@ import android.util.Log
 import com.google.firebase.firestore.FirebaseFirestore
 import com.example.sprint0nj.data.Classes.Playlist
 import com.example.sprint0nj.data.Classes.Workout
+import com.google.firebase.firestore.FieldPath
+import com.google.firebase.firestore.FieldValue
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -14,19 +16,60 @@ class FirestoreRepository {
     private val db = FirebaseFirestore.getInstance()
     private val playlistsCollection = db.collection("playlists")
 
-    // Function to add a playlist to Firestore using provided playlist
-    fun postPlaylist(playlist: Playlist) {
-        playlistsCollection.document(playlist.id).set(playlist)
-            .addOnSuccessListener {
-                Log.d("FirestoreRepo", "Playlist '${playlist.name}' successfully posted to Firestore.")
+    // Fetching pair of all playlist ids and names, for displaying in library screen
+    fun fetchPlaylistSummaries(userId: String, onResult: (List<Pair<String, String>>) -> Unit) {
+        val userRef = db.collection("users").document(userId)
+
+        userRef.get().addOnSuccessListener { document ->
+            if (document.exists()) {
+                val playlistIds = document.get("playlistIds") as? List<String> ?: emptyList() // If null, empty list
+
+                if (playlistIds.isEmpty()) { // Handling edge cases
+                    onResult(emptyList())
+                    return@addOnSuccessListener
+                }
+
+                db.collection("playlists") // Searching playlists collection with list of user's playlist ids
+                    .whereIn(FieldPath.documentId(), playlistIds)
+                    .get()
+                    .addOnSuccessListener { summaryQuery ->
+                        val summaries = summaryQuery.documents.mapNotNull { doc -> // mapping playlist summaries
+                            val name = doc.getString("name")
+                            if (name != null) doc.id to name else null
+                        }
+                        onResult(summaries)
+                    }
+            } else {
+                onResult(emptyList())  // No user doc = no playlists
             }
-            .addOnFailureListener { exception ->
-                Log.d("FirestoreRepo", "Error posting playlist '${playlist.name}': ${exception.message}")
-            }
+        }.addOnFailureListener {
+            onResult(emptyList())  // In case of any error
+        }
     }
+
+
+
+    // Function to add a playlist to Firestore using provided playlist
+    fun postPlaylist(playlist: Playlist, userId: String,  onSuccess: () -> Unit = {}) {
+        val playlistRef = playlistsCollection.document(playlist.id)
+        val userRef = db.collection("users").document(userId)
+
+        db.runBatch { batch ->
+            // Save the playlist
+            batch.set(playlistRef, playlist)
+
+            // Add this playlist ID to the user's list
+            batch.update(userRef, "playlistIds", FieldValue.arrayUnion(playlist.id))
+
+        }.addOnSuccessListener {
+            onSuccess()
+        }
+    }
+
+
+    // Fetches playlist by specified id. Used for displaying individual workout pages
     suspend fun fetchPlaylist(playlistId: String): Playlist? {
         return try {
-            Log.d("PlaylistId", playlistId)
             val document = playlistsCollection.document(playlistId).get().await()
             if (document.exists()) {
                 document.toObject(Playlist::class.java)
@@ -37,6 +80,8 @@ class FirestoreRepository {
             null
         }
     }
+
+    // Maps firestore workout document to Classes.Workout object
     suspend fun fetchWorkouts(): List<Workout> {
         val snapshot = db.collection("Workouts").get().await()
         return snapshot.documents.mapNotNull { doc ->
@@ -45,79 +90,47 @@ class FirestoreRepository {
     }
 
 
-
-    // Fetch all playlist IDs from firestore collection
-    suspend fun fetchPlaylistIds(): List<String> {
-        return try {
-            val snapshot = playlistsCollection.get().await()
-            snapshot.documents.mapNotNull { it.id } // Extract document IDs
-        } catch (e: Exception) {
-            emptyList() // Return empty list if there's an error
-        }
-    }
-
+    // Removes given workout from playlist in firestore
     fun removeWorkout(
         playlistId: String,
         workoutId: String,
-        onSuccess: () -> Unit = {},
-        onFailure: (Exception) -> Unit = {}
+        onSuccess: () -> Unit = {} // On success, needs to then update UI and give toast message
     ) {
-        val playlistRef = playlistsCollection.document(playlistId)
+        val playlist = playlistsCollection.document(playlistId)
 
-        playlistRef.get().addOnSuccessListener { document ->
+        playlist.get().addOnSuccessListener { document ->
             if (document != null && document.exists()) {
-                val playlist = document.toObject(Playlist::class.java)
-                if (playlist != null) {
-                    val updatedWorkouts = playlist.workouts.filter { it.id != workoutId }
-
-                    playlistRef.update("workouts", updatedWorkouts)
-                        .addOnSuccessListener {
-                            Log.d("Firestore", "Workout removed successfully")
-                            onSuccess()
-                        }
-                        .addOnFailureListener { e ->
-                            Log.e("Firestore", "Failed to update playlist", e)
-                            onFailure(e)
-                        }
-                }
-            } else {
-                onFailure(Exception("Playlist not found"))
+                val playlistObj = document.toObject(Playlist::class.java)
+                val updatedWorkouts = playlistObj?.workouts?.filter { it.id != workoutId }
+                    
+                playlist.update("workouts", updatedWorkouts)
+                    .addOnSuccessListener {
+                        Log.d("Firestore", "Workout removed successfully")
+                        onSuccess()
+                    }
             }
-        }.addOnFailureListener { e ->
-            onFailure(e)
         }
     }
 
 
+    fun removePlaylist(userId: String, playlistId: String, onSuccess: () -> Unit) {
 
-    suspend fun fetchPlaylistSummaries(): List<Pair<String, String>> {
-        val playlistNames = playlistsCollection.get().await()
-        return playlistNames.documents.map { document ->
-            val id = document.id
-            val name = document.data?.get("name") as String ?: "Unnamed Playlist"
-            id to name
+        // Reference to the playlist document
+        val playlistRef = db.collection("playlists").document(playlistId)
+        val userRef = db.collection("users").document(userId) // Reference to the user document
+
+        db.runBatch { batch ->
+            // Delete the playlist document
+            batch.delete(playlistRef)
+
+            // Update the user's playlist list by removing this playlist ID
+            batch.update(userRef, "playlistIds", FieldValue.arrayRemove(playlistId))
+        }.addOnSuccessListener {
+            onSuccess()
         }
     }
 
-    fun getPlaylistsFlow(): Flow<List<Pair<String, String>>> = callbackFlow {
-        val listenerRegistration = db.collection("playlists")
-            .addSnapshotListener { snapshot, error ->
-                if (error != null || snapshot == null) {
-                    close(error ?: Exception("Snapshot is null"))
-                    return@addSnapshotListener
-                }
 
-                val summaries = snapshot.documents.mapNotNull {
-                    val id = it.id
-                    val name = it.getString("name")
-                    if (name != null) id to name else null
-                }
-
-                trySend(summaries)
-            }
-
-        awaitClose { listenerRegistration.remove() }
-    }
 
 
 }
