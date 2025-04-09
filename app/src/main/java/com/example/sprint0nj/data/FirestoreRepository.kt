@@ -16,15 +16,9 @@ class FirestoreRepository {
 
     // Function to add a playlist to Firestore using provided playlist
     fun postPlaylist(playlist: Playlist) {
-        // Enforce unique workouts by filtering duplicates based on their ID.
-        playlist.workouts = playlist.workouts.distinctBy { it.id }.toMutableList()
-        Log.d("FirestoreRepo", "Posting playlist with workouts count: ${playlist.workouts.size}")
-
-        // Update just the workouts field in the playlist document.
-        playlistsCollection.document(playlist.id)
-            .update("workouts", playlist.workouts)
+        playlistsCollection.document(playlist.id).set(playlist)
             .addOnSuccessListener {
-                Log.d("FirestoreRepo", "Playlist '${playlist.name}' successfully updated in Firestore.")
+                Log.d("FirestoreRepo", "Playlist '${playlist.name}' successfully posted to Firestore.")
             }
             .addOnFailureListener { exception ->
                 Log.d("FirestoreRepo", "Error posting playlist '${playlist.name}': ${exception.message}")

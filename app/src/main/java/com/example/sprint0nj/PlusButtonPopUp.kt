@@ -107,7 +107,6 @@ data class WorkoutEntry(
 @Composable
 fun WorkoutSelectionDialog(
     playlist: Playlist,
-    initialWorkout: WorkoutEntry? = null,
     onDismiss: () -> Unit,
     onConfirm: (WorkoutEntry) -> Unit
 ) {
@@ -184,10 +183,9 @@ fun WorkoutSelectionDialog(
                     if (selectedWorkout.isNotEmpty()) {
                         val reps = repsText.toIntOrNull() ?: 0
                         val sets = setsText.toIntOrNull() ?: 0
-                        val workoutEntry = WorkoutEntry(selectedWorkout, reps, sets)
                         playlist.workouts.add(Workout(UUID.randomUUID().toString(), selectedWorkout, null, reps, sets, ""))
                         firestoreRepository.postPlaylist(playlist)
-                        onConfirm(workoutEntry)
+                        onConfirm(WorkoutEntry(selectedWorkout, reps, sets))
                         onDismiss()
                     }
                 },
