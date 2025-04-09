@@ -224,12 +224,46 @@ fun WorkoutSelectionDialog(
                         // Create a WorkoutEntry from the inputs
                         val workoutEntry = WorkoutEntry(selectedWorkout, reps, sets) // maybe we could include target muscle here
 
-                        // Then could try and implement Firebase functionality here like
-                        // if (initialWorkout == null) { addWorkout(...) } else { updateWorkout(...) }
+                        if (initialWorkout == null) {
+                            // Add operation: add a new workout
+                            playlist.workouts.add(
+                                Workout(
+                                    id = UUID.randomUUID().toString(),
+                                    title = selectedWorkout,
+                                    reps = reps,
+                                    sets = sets,
+                                    description = ""
+                                )
+                            )
+                        } else {
+                            // Edit operation: update the existing workout
 
-                        playlist.workouts.add(Workout(UUID.randomUUID().toString(), selectedWorkout, null, reps, sets, ""))
+                            // using the initialWorkout.name as a placeholder for identifying the workout
+                            val index = playlist.workouts.indexOfFirst { it.title == initialWorkout.name }
+                            if (index != -1) {
+                                // update the found workout while keeping its ID
+                                playlist.workouts[index] = Workout(
+                                    id = playlist.workouts[index].id,
+                                    title = selectedWorkout,
+                                    reps = reps,
+                                    sets = sets,
+                                    description = ""
+                                )
+                            } else {
+                                // if not found, add it
+                                playlist.workouts.add(
+                                    Workout(
+                                        id = UUID.randomUUID().toString(),
+                                        title = selectedWorkout,
+                                        reps = reps,
+                                        sets = sets,
+                                        description = ""
+                                    )
+                                )
+                            }
+                        }
+
                         firestoreRepository.postPlaylist(playlist)
-
                         onConfirm(workoutEntry) // Changed to workoutEntry
                         onDismiss()
                     }
