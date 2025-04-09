@@ -128,7 +128,10 @@ fun LibraryScreen(navController: NavHostController) {
                     MenuOption("Import Playlist") {
                         Toast.makeText(context, "Import Playlist clicked", Toast.LENGTH_SHORT).show()
                     }
-                )
+                ),
+                onPlaylistAdded = {
+                    localRefreshPlaylists()
+                }
             )
         }
 

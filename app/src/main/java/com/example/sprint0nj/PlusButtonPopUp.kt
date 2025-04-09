@@ -45,12 +45,13 @@ data class MenuOption(
 @Composable
 fun PlaylistNameDialog(
     onDismiss: () -> Unit,      // Called to dismiss the dialog
-    onConfirm: (String) -> Unit // Called with the entered playlist name when confirmed
+    onConfirm: (String) -> Unit, // Called with the entered playlist name when confirmed
+    onPlaylistAdded: () -> Unit
 ) {
     val context = LocalContext.current
     var playlistName by remember { mutableStateOf(TextFieldValue("")) }
     val firestoreRepository = remember { FirestoreRepository() }
-    var selectedUserId = "4dz7wUNpKHI0Br9lSg9o" // Will need to be updated to allow for multiple
+    val selectedUserId = "4dz7wUNpKHI0Br9lSg9o" // Will need to be updated to allow for multiple
                                                 // users instead of hardcoding
 
     AlertDialog(
@@ -80,6 +81,7 @@ fun PlaylistNameDialog(
                         onSuccess = {
                             val name = playlist.name
                             Toast.makeText(context, "Added playlist: $name", Toast.LENGTH_SHORT).show()
+                            onPlaylistAdded()
                         }
                     )
 
@@ -115,6 +117,8 @@ data class WorkoutEntry(
     val reps: Int,
     val sets: Int
 )
+
+///////////////////////////////////////////////////////////////////////////////////
 
 @Composable
 fun WorkoutSelectionDialog(
@@ -199,7 +203,10 @@ fun WorkoutSelectionDialog(
                         val reps = repsText.toIntOrNull() ?: 0
                         val sets = setsText.toIntOrNull() ?: 0
                         playlist.workouts.add(Workout(UUID.randomUUID().toString(), selectedWorkout, null, reps, sets, ""))
-                        firestoreRepository.postPlaylist(playlist = playlist, userId = selectedUserId)
+                        firestoreRepository.postPlaylist(
+                            playlist = playlist,
+                            userId = selectedUserId
+                            )
                         onConfirm(WorkoutEntry(selectedWorkout, reps, sets))
                         onDismiss()
                     }
@@ -220,13 +227,14 @@ fun WorkoutSelectionDialog(
     )
 }
 
-
+///////////////////////////////////////////////////////////////////////////////////
 
 // Reusable composable for the plus button with a popup (dropdown) menu
 // This component can be used in multiple screens by passing different lists of MenuOption items
 @Composable
 fun PlusButtonWithMenu(
-    menuOptions: List<MenuOption>  // A list of menu options to display in the dropdown
+    menuOptions: List<MenuOption>,  // A list of menu options to display in the dropdown
+    onPlaylistAdded: () -> Unit
 ) {
     // Local state to track whether the dropdown menu is currently expanded
     var menuExpanded by remember { mutableStateOf(false) }
@@ -234,7 +242,7 @@ fun PlusButtonWithMenu(
     var showPlaylistDialog by remember { mutableStateOf(false) }
     // State to control the visibility of the Workout dialog
     var showWorkoutDialog by remember { mutableStateOf(false) }
-
+    val firestoreRepository = remember { FirestoreRepository() }
     // Capture the context once in this composable scope
     val context = LocalContext.current
 
@@ -301,14 +309,9 @@ fun PlusButtonWithMenu(
                 onDismiss = { showPlaylistDialog = false },
                 onConfirm = { playlistName ->
 
-                    /*
-
-                    Replace Toast with firestore integration to add the new playlist to database.
-
-
-                    */
                     Toast.makeText(context, "Playlist added: $playlistName", Toast.LENGTH_SHORT).show()
-                }
+                },
+                onPlaylistAdded = onPlaylistAdded
             )
         }
 

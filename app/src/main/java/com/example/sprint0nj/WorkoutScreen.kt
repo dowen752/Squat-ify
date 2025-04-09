@@ -112,7 +112,10 @@ fun WorkoutScreen(navController: NavController, playlistId: String) {
                         MenuOption("Import Workout") {
                             Toast.makeText(context, "Import Workout clicked", Toast.LENGTH_SHORT).show()
                         }
-                    )
+                    ),
+                    onPlaylistAdded = {
+
+                    }
                 )
             }
         }
