@@ -170,7 +170,8 @@ fun WorkoutSelectionDialog(
                 Box {
                     Button(
                         onClick = { isDropdownExpanded = true },
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF212121))
 
 
                     ) {
@@ -203,7 +204,8 @@ fun WorkoutSelectionDialog(
                 Box {
                     Button(
                         onClick = { isTargetMuscleDropdownExpanded = true },
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF212121))
                     ) {
                         Text(
                             text = if (selectedTargetMuscle.isEmpty()) "Target Muscle" else selectedTargetMuscle,
