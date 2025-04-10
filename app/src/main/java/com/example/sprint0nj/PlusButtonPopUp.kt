@@ -45,10 +45,15 @@ data class MenuOption(
 @Composable
 fun PlaylistNameDialog(
     onDismiss: () -> Unit,      // Called to dismiss the dialog
-    onConfirm: (String) -> Unit // Called with the entered playlist name when confirmed
+    onConfirm: (String) -> Unit, // Called with the entered playlist name when confirmed
+    onPlaylistAdded: () -> Unit
 ) {
+    val context = LocalContext.current
     var playlistName by remember { mutableStateOf(TextFieldValue("")) }
     val firestoreRepository = remember { FirestoreRepository() }
+    val selectedUserId = "4dz7wUNpKHI0Br9lSg9o" // Will need to be updated to allow for multiple
+                                                // users instead of hardcoding
+
     AlertDialog(
         onDismissRequest = { onDismiss() },
         title = { Text("Playlist Name:") },
@@ -70,7 +75,16 @@ fun PlaylistNameDialog(
                         id = UUID.randomUUID().toString(),
                         name = playlistName.text
                     )
-                    firestoreRepository.postPlaylist(playlist)
+                    firestoreRepository.postPlaylist(
+                        playlist = playlist,
+                        userId = selectedUserId,
+                        onSuccess = {
+                            val name = playlist.name
+                            Toast.makeText(context, "Added playlist: $name", Toast.LENGTH_SHORT).show()
+                            onPlaylistAdded()
+                        }
+                    )
+
                     onConfirm(playlistName.text) // Pass the input to the onConfirm callback
                     onDismiss() // Close the dialog after confirming
                 },
@@ -104,19 +118,44 @@ data class WorkoutEntry(
     val sets: Int
 )
 
+///////////////////////////////////////////////////////////////////////////////////
+
 @Composable
 fun WorkoutSelectionDialog(
     playlist: Playlist,
+    initialWorkout: WorkoutEntry? = null,
     onDismiss: () -> Unit,
     onConfirm: (WorkoutEntry) -> Unit
 ) {
     var selectedWorkout by remember { mutableStateOf("") }
     var repsText by remember { mutableStateOf("") }
     var setsText by remember { mutableStateOf("") }
+
+    // State for the Target Muscle button
+    var selectedTargetMuscle by remember { mutableStateOf("") }
+    var isTargetMuscleDropdownExpanded by remember { mutableStateOf(false) }
+    // A sample list of available target muscles
+    val availableMuscles = remember { mutableStateOf(listOf("Chest", "Back", "Legs", "Biceps", "Triceps", "Shoulders", "Abs")) }
+
+
     var isDropdownExpanded by remember { mutableStateOf(false) }
     val availableWorkouts = remember { mutableStateOf<List<Workout>>(emptyList())}
     val firestoreRepository = remember {FirestoreRepository()}
 //    val playlist = remember { mutableStateOf<Playlist?>(null) }
+
+    var selectedUserId = "4dz7wUNpKHI0Br9lSg9o" // Will need to be updated to allow for multiple
+                                                // users instead of hardcoding
+
+    // Filters firestore list for targeted muscle
+    val filteredWorkouts by remember(selectedTargetMuscle, availableWorkouts.value) {
+        derivedStateOf {
+            if (selectedTargetMuscle.isEmpty()) {
+                availableWorkouts.value
+            } else {
+                availableWorkouts.value.filter { it.target.equals(selectedTargetMuscle, ignoreCase = true) }
+            }
+        }
+    }
 
     LaunchedEffect(Unit){
         availableWorkouts.value = firestoreRepository.fetchWorkouts()
@@ -131,7 +170,8 @@ fun WorkoutSelectionDialog(
                 Box {
                     Button(
                         onClick = { isDropdownExpanded = true },
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF212121))
 
 
                     ) {
@@ -145,7 +185,7 @@ fun WorkoutSelectionDialog(
                         expanded = isDropdownExpanded,
                         onDismissRequest = { isDropdownExpanded = false }
                     ) {
-                        availableWorkouts.value.forEach { workout ->
+                        filteredWorkouts.forEach { workout ->
                             DropdownMenuItem(
                                 text = { Text(workout.title) },
                                 onClick = {
@@ -159,6 +199,35 @@ fun WorkoutSelectionDialog(
                     }
                 }
                 Spacer(modifier = Modifier.height(8.dp))
+                // "Target Muscle" Button and Dropdown
+
+                Box {
+                    Button(
+                        onClick = { isTargetMuscleDropdownExpanded = true },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF212121))
+                    ) {
+                        Text(
+                            text = if (selectedTargetMuscle.isEmpty()) "Target Muscle" else selectedTargetMuscle,
+                            fontSize = 16.sp
+                        )
+                    }
+                    DropdownMenu(
+                        expanded = isTargetMuscleDropdownExpanded,
+                        onDismissRequest = { isTargetMuscleDropdownExpanded = false }
+                    ) {
+                        availableMuscles.value.forEach { muscle ->
+                            DropdownMenuItem(
+                                text = { Text(muscle) },
+                                onClick = {
+                                    selectedTargetMuscle = muscle
+                                    isTargetMuscleDropdownExpanded = false
+                                }
+                            )
+                        }
+                    }
+                }
+
                 // TextField for entering the number of Reps.
                 OutlinedTextField(
                     value = repsText,
@@ -183,9 +252,54 @@ fun WorkoutSelectionDialog(
                     if (selectedWorkout.isNotEmpty()) {
                         val reps = repsText.toIntOrNull() ?: 0
                         val sets = setsText.toIntOrNull() ?: 0
-                        playlist.workouts.add(Workout(UUID.randomUUID().toString(), selectedWorkout, null, reps, sets, ""))
-                        firestoreRepository.postPlaylist(playlist)
-                        onConfirm(WorkoutEntry(selectedWorkout, reps, sets))
+
+                        // Create a WorkoutEntry from the inputs
+                        val workoutEntry = WorkoutEntry(selectedWorkout, reps, sets) // maybe we could include target muscle here
+
+                        if (initialWorkout == null) {
+                            // Add operation: add a new workout
+                            playlist.workouts.add(
+                                Workout(
+                                    id = UUID.randomUUID().toString(),
+                                    title = selectedWorkout,
+                                    reps = reps,
+                                    sets = sets,
+                                    description = ""
+                                )
+                            )
+                        } else {
+                            // Edit operation: update the existing workout
+
+                            // using the initialWorkout.name as a placeholder for identifying the workout
+                            val index = playlist.workouts.indexOfFirst { it.title == initialWorkout.name }
+                            if (index != -1) {
+                                // update the found workout while keeping its ID
+                                playlist.workouts[index] = Workout(
+                                    id = playlist.workouts[index].id,
+                                    title = selectedWorkout,
+                                    reps = reps,
+                                    sets = sets,
+                                    description = ""
+                                )
+                            } else {
+                                // if not found, add it
+                                playlist.workouts.add(
+                                    Workout(
+                                        id = UUID.randomUUID().toString(),
+                                        title = selectedWorkout,
+                                        reps = reps,
+                                        sets = sets,
+                                        description = ""
+                                    )
+                                )
+                            }
+                        }
+
+                        firestoreRepository.postPlaylist(
+                    playlist = playlist,
+                    userId = selectedUserId
+                )
+                        onConfirm(workoutEntry)
                         onDismiss()
                     }
                 },
@@ -205,13 +319,14 @@ fun WorkoutSelectionDialog(
     )
 }
 
-
+///////////////////////////////////////////////////////////////////////////////////
 
 // Reusable composable for the plus button with a popup (dropdown) menu
 // This component can be used in multiple screens by passing different lists of MenuOption items
 @Composable
 fun PlusButtonWithMenu(
-    menuOptions: List<MenuOption>  // A list of menu options to display in the dropdown
+    menuOptions: List<MenuOption>,  // A list of menu options to display in the dropdown
+    onPlaylistAdded: () -> Unit
 ) {
     // Local state to track whether the dropdown menu is currently expanded
     var menuExpanded by remember { mutableStateOf(false) }
@@ -219,7 +334,7 @@ fun PlusButtonWithMenu(
     var showPlaylistDialog by remember { mutableStateOf(false) }
     // State to control the visibility of the Workout dialog
     var showWorkoutDialog by remember { mutableStateOf(false) }
-
+    val firestoreRepository = remember { FirestoreRepository() }
     // Capture the context once in this composable scope
     val context = LocalContext.current
 
@@ -234,7 +349,7 @@ fun PlusButtonWithMenu(
             onClick = { menuExpanded = true }, // When clicked, set menuExpanded to true to open the menu
             modifier = Modifier.size(56.dp),     // Set the fixed size of the button (can be adjusted).
             shape = RoundedCornerShape(12.dp),   // Rounded corners. Can change the dp value to alter curvature
-            colors = ButtonDefaults.buttonColors(containerColor = Color.White), // Button background color
+            colors = ButtonDefaults.buttonColors(containerColor = Color.Black), // Button background color
             contentPadding = PaddingValues(0.dp)  // Remove any internal padding for a tighter layout
         ) {
 
@@ -245,7 +360,7 @@ fun PlusButtonWithMenu(
             ) {
                 // Text displaying the plus sign
                 // Can adjust fontSize and fontWeight for customization
-                Text("+", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                Text("+", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = Color.White)
             }
         }
 
@@ -286,14 +401,9 @@ fun PlusButtonWithMenu(
                 onDismiss = { showPlaylistDialog = false },
                 onConfirm = { playlistName ->
 
-                    /*
-
-                    Replace Toast with firestore integration to add the new playlist to database.
-
-
-                    */
                     Toast.makeText(context, "Playlist added: $playlistName", Toast.LENGTH_SHORT).show()
-                }
+                },
+                onPlaylistAdded = onPlaylistAdded
             )
         }
 

@@ -7,7 +7,9 @@ class Classes {
         var duration: String? = null,
         var reps: Int? = null,
         var sets: Int? = null,
-        var description: String = ""
+        var description: String = "",
+        var target: String = "",
+        var tutorialLink: String = ""
     )
 
     data class Playlist(
@@ -23,6 +25,15 @@ class Classes {
             workouts.remove(workout)
         }
     }
+
+    // Use firebaseAuth for password and authentification handling, doesnt need to be stored here
+    data class User(
+        val displayName: String = "", // Name or something
+        val email: String = "",  // For login
+        val playlistIds: MutableList<String> = mutableListOf(), // List of playlist UUIDs associated with the user
+        val userId: String = "" // Will be a UUID on initialization
+    )
+
     object WorkoutMods { // Using this instead of normal initialization means we can pass these values as parameters
         fun addWorkout(           // instead of needing to identify each value
             id: String,
@@ -36,13 +47,3 @@ class Classes {
         }
     }
 }
-//    val actWorkout = listOf(
-//        Workout(1, "Full Body HIIT", "30 min", "Intermediate"),
-//        Workout(2, "Yoga Flow", "45 min", "Beginner"),
-//        Workout(3, "Strength Training", "40 min", "Advanced"),
-//        Workout(4, "Cardio Blast", "20 min", "Intermediate"),
-//        Workout(5, "Core Burner", "25 min", "Intermediate"),
-//        Workout(6, "Leg Day", "50 min", "Advanced"),
-//        Workout(7, "Upper Body Strength", "35 min", "Intermediate")
-//    )
-//}
