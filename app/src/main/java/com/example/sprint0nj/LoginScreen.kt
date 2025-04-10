@@ -1,5 +1,8 @@
 package com.example.sprint0nj
 
+import android.os.Bundle
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -11,13 +14,18 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
+import coil.compose.rememberImagePainter
+import androidx.compose.foundation.Image
 
 @Composable
 fun LoginScreen(navController: NavHostController) {
-    // State is needed to allow typing, even if we don't use the data
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+
+    val imageUrl = "https://i.imgur.com/XEIK40Z.png"
 
     Box(
         modifier = Modifier
@@ -32,17 +40,26 @@ fun LoginScreen(navController: NavHostController) {
         ) {
             Text(
                 text = "Squat-ify",
-                fontSize = 32.sp,
+                fontSize = 45.sp,
                 color = Color.Black
             )
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-            // Username input
+            Image(
+                painter = rememberImagePainter(imageUrl),
+                contentDescription = "Login Screen Image",
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(300.dp)
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
             OutlinedTextField(
                 value = username,
                 onValueChange = { username = it },
-                label = { Text("Username", color = Color.White) },
+                label = { Text("Email", color = Color.White) },
                 textStyle = LocalTextStyle.current.copy(color = Color.White),
                 modifier = Modifier.width(260.dp),
                 colors = OutlinedTextFieldDefaults.colors(
@@ -56,10 +73,8 @@ fun LoginScreen(navController: NavHostController) {
                 )
             )
 
-
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Password input
             OutlinedTextField(
                 value = password,
                 onValueChange = { password = it },
@@ -77,7 +92,6 @@ fun LoginScreen(navController: NavHostController) {
                     unfocusedContainerColor = Color(0xFF212121)
                 )
             )
-
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -99,4 +113,9 @@ fun LoginScreen(navController: NavHostController) {
                 .clickable { navController.navigate("library") }
         )
     }
+}
+
+@Composable
+fun PreviewLoginScreen() {
+    LoginScreen(navController = rememberNavController())
 }

@@ -229,7 +229,7 @@ fun WorkoutScreen(navController: NavController, playlistId: String) {
         }
 
 
-            Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
         // Example bottom navigation row
         Row(
