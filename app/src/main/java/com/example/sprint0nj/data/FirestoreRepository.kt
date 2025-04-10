@@ -102,7 +102,7 @@ class FirestoreRepository {
             if (document != null && document.exists()) {
                 val playlistObj = document.toObject(Playlist::class.java)
                 val updatedWorkouts = playlistObj?.workouts?.filter { it.id != workoutId }
-                    
+
                 playlist.update("workouts", updatedWorkouts)
                     .addOnSuccessListener {
                         Log.d("Firestore", "Workout removed successfully")

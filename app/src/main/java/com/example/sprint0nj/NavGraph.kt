@@ -16,7 +16,7 @@ fun AppNavHost(
     NavHost(navController = navController, startDestination = startDestination) {
         // 1. Login route
         composable("login") {
-            LoginScreen(navController)
+            LoginScreen(navController) // <-- Login screen
         }
 
         // 2. Library route (playlist screen)
@@ -31,12 +31,12 @@ fun AppNavHost(
                 Log.d("NavGraph", "Missing playlistId in navigation args")
                 return@composable
             }
-            WorkoutScreen(navController, playlistId) // <-- Workout Screen
+            WorkoutScreen(navController, playlistId) // <-- Workout screen
         }
+
         // 4. Tutorial route
-        // New tutorial route
         composable("tutorial") {
-            TutorialScreen(navController)
+            TutorialScreen(navController) // <-- Tutorial screen
         }
     }
 }
