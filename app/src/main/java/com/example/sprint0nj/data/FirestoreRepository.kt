@@ -161,6 +161,35 @@ class FirestoreRepository {
             }
     }
 
+
+    fun sharePlaylist(destUsername: String, playlistId: String, onSuccess: () -> Unit){
+
+        val usersCollection = db.collection("users")
+        usersCollection.whereEqualTo("displayName", destUsername)
+            .get()
+            .addOnSuccessListener { userSnapshot ->
+                if(!userSnapshot.isEmpty){
+                    val destUser = userSnapshot.documents.first()
+                    val userId = destUser.id
+
+                    val currentPlaylists = destUser.get("playlistIds") as? MutableList<String> ?: mutableListOf()
+                    if(!currentPlaylists.contains(playlistId)){
+                        currentPlaylists.add(playlistId)
+                        usersCollection.document(userId)
+                            .update("playlistIds", currentPlaylists)
+                            .addOnSuccessListener { onSuccess() }
+                    } else{
+                        onSuccess()
+                    }
+
+                }
+            }
+
+
+
+    }
+
+
     fun switchingUsers(){
         val newUid = FirebaseAuth.getInstance().currentUser?.uid
         val legacyUid = "4dz7wUNpKHI0Br9lSg9o" // your test UID
