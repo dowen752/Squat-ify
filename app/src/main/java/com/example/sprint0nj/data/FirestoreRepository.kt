@@ -3,6 +3,7 @@ import android.util.Log
 import com.google.firebase.firestore.FirebaseFirestore
 import com.example.sprint0nj.data.Classes.Playlist
 import com.example.sprint0nj.data.Classes.Workout
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.FieldValue
 import kotlinx.coroutines.channels.awaitClose
@@ -116,7 +117,7 @@ class FirestoreRepository {
     fun removePlaylist(userId: String, playlistId: String, onSuccess: () -> Unit) {
 
         // Reference to the playlist document
-        val playlistRef = db.collection("playlists").document(playlistId)
+        val playlistRef = playlistsCollection.document(playlistId)
         val userRef = db.collection("users").document(userId) // Reference to the user document
 
         db.runBatch { batch ->
@@ -131,6 +132,50 @@ class FirestoreRepository {
     }
 
 
+    fun postUser(username: String, password: String, displayName: String, onSuccess: () -> Unit){
+        val fakeImposterEmail = "${username}@squatify.com"
+        FirebaseAuth.getInstance().createUserWithEmailAndPassword(fakeImposterEmail, password)
+            .addOnSuccessListener{ result->
+                val uid = result.user?.uid
+                if(uid != null){
+                    val newUser = Classes.User(
+                        userId = uid,
+                        displayName = displayName,
+                        playlistIds = mutableListOf("c1f35457-a0ab-43eb-a38a-0f738bdac29d")
+                    )
+
+                    db.collection("users").document(uid)
+                        .set(newUser)
+                        .addOnSuccessListener {
+                            onSuccess()
+                        }
+                        .addOnFailureListener { firestoreError ->
+                            Log.d("Firestore", "setting document no workie: ${firestoreError.message}")
+                        }
+                } else{
+                    Log.d("Auth UID", "UID brokie")
+                }
+            }
+            .addOnFailureListener { error ->
+                Log.d("Auth Auth", "Authentication brokie: ${error.message}")
+            }
+    }
+
+    fun switchingUsers(){
+        val newUid = FirebaseAuth.getInstance().currentUser?.uid
+        val legacyUid = "4dz7wUNpKHI0Br9lSg9o" // your test UID
+
+        val users = db.collection("users")
+        users.document(newUid!!).get().addOnSuccessListener { newDoc ->
+            if (!newDoc.exists()) {
+                users.document(legacyUid).get().addOnSuccessListener { legacyDoc ->
+                    if (legacyDoc.exists()) {
+                        users.document(newUid).set(legacyDoc.data!!)
+                    }
+                }
+            }
+        }
+    }
 
 
 }

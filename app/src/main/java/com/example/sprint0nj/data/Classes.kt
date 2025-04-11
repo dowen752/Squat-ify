@@ -28,22 +28,9 @@ class Classes {
 
     // Use firebaseAuth for password and authentification handling, doesnt need to be stored here
     data class User(
+        val userId: String = "", // Will be a UUID on initialization
         val displayName: String = "", // Name or something
-        val email: String = "",  // For login
-        val playlistIds: MutableList<String> = mutableListOf(), // List of playlist UUIDs associated with the user
-        val userId: String = "" // Will be a UUID on initialization
+        val playlistIds: MutableList<String> = mutableListOf() // List of playlist UUIDs associated with the user
     )
 
-    object WorkoutMods { // Using this instead of normal initialization means we can pass these values as parameters
-        fun addWorkout(           // instead of needing to identify each value
-            id: String,
-            title: String,
-            duration: String? = null,
-            reps: Int? = null,
-            sets: Int? = null,
-            description: String = ""
-        ): Workout {
-            return Classes.Workout(id, title, duration, reps, sets, description)
-        }
-    }
 }

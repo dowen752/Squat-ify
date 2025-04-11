@@ -22,6 +22,7 @@ import com.example.sprint0nj.data.FirestoreRepository
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import com.example.sprint0nj.MoreOptionsMenu
+import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
@@ -54,8 +55,7 @@ fun LibraryScreen(navController: NavHostController) {
     val scope = rememberCoroutineScope()
     val firestoreRepository = remember { FirestoreRepository() }
     val playlists = remember { mutableStateOf<List<Pair<String, String>>>(emptyList()) }
-    var selectedUserId = "4dz7wUNpKHI0Br9lSg9o" // Will need to be updated to allow for multiple
-                                                // users instead of hardcoding
+    var selectedUserId = FirebaseAuth.getInstance().currentUser?.uid
 
 
     val localRefreshPlaylists = {
@@ -78,7 +78,7 @@ fun LibraryScreen(navController: NavHostController) {
 //    }
 
     LaunchedEffect(Unit) {
-        firestoreRepository.fetchPlaylistSummaries(userId = selectedUserId){ summaries ->
+        firestoreRepository.fetchPlaylistSummaries(userId = selectedUserId!!){ summaries ->
             playlists.value = summaries
         }
 
@@ -168,7 +168,7 @@ fun LibraryScreen(navController: NavHostController) {
                         },
                         onRemove = {
                             firestoreRepository.removePlaylist(
-                                userId = selectedUserId,
+                                userId = selectedUserId!!,
                                 playlistId = id,
                                 onSuccess = {
                                     localRefreshPlaylists()
