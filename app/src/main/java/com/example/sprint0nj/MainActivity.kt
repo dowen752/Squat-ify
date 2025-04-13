@@ -163,8 +163,13 @@ fun LibraryScreen(navController: NavHostController) {
                     )
                     // "..." button with dropdown menu containing Share and Remove (placeholder)
                     MoreOptionsMenu(
-                        onShare = {
-                            Toast.makeText(context, "Share playlist: $name", Toast.LENGTH_SHORT).show()
+                        onShare = { // destUsername will be replaced with user input once we have pop up
+                            firestoreRepository.sharePlaylist(destUsername = "Thats Gonna Leave A Marc",
+                                playlistId = id,
+                                onSuccess = {
+                                    Toast.makeText(context, "Shared playlist: $name", Toast.LENGTH_SHORT).show()
+                                }
+                                )
                         },
                         onRemove = {
                             firestoreRepository.removePlaylist(
