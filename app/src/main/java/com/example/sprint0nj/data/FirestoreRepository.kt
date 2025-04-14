@@ -118,9 +118,9 @@ class FirestoreRepository {
 
         // Reference to the playlist document
         val playlistRef = playlistsCollection.document(playlistId)
-        val userRef = db.collection("users").document(userId) // Reference to the user document
+        val userRef = db.collection("users").document(userId)
 
-        db.runBatch { batch ->
+        db.runBatch{ batch ->
             // Delete the playlist document
             batch.delete(playlistRef)
 
@@ -131,7 +131,7 @@ class FirestoreRepository {
         }
     }
 
-
+    // Username and password are n o t saved in firestore. That info is stored in auth. When looking for users, use displayName to filter.
     fun postUser(username: String, password: String, displayName: String, onSuccess: () -> Unit){
         val fakeImposterEmail = "${username}@squatify.com"
         FirebaseAuth.getInstance().createUserWithEmailAndPassword(fakeImposterEmail, password)
@@ -189,7 +189,7 @@ class FirestoreRepository {
 
     }
 
-
+// Takes all data from one user and imposes it on another, not really needed unless switching usernames and passwords
     fun switchingUsers(){
         val newUid = FirebaseAuth.getInstance().currentUser?.uid
         val legacyUid = "4dz7wUNpKHI0Br9lSg9o" // your test UID
