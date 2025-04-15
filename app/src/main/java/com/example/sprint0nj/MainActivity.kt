@@ -58,6 +58,8 @@ fun LibraryScreen(navController: NavHostController) {
     var selectedUserId = FirebaseAuth.getInstance().currentUser?.uid
 
 
+
+
     val localRefreshPlaylists = {
         if (selectedUserId != null) {
             scope.launch {
@@ -70,6 +72,19 @@ fun LibraryScreen(navController: NavHostController) {
             }
         }
     }
+
+// State variable to control the display of the ShareDialog
+    var showShareDialog by remember { mutableStateOf(false) }
+
+    // tate variable to hold the playlist information that will be shared
+    var selectedPlaylistForShare by remember { mutableStateOf<Pair<String, String>?>(null) }
+
+    // Controls the display of the rename dialog
+    var showRenameDialog by remember { mutableStateOf(false) }
+// Holds the playlist to rename, using a Pair of ID and name
+    var playlistToRename by remember { mutableStateOf<Pair<String, String>?>(null) }
+
+
 //    val localFetchPlaylists = {
 //        scope.launch{
 //            val updated = firestoreRepository.fetchPlaylist(playlistId)
@@ -135,6 +150,7 @@ fun LibraryScreen(navController: NavHostController) {
             )
         }
 
+
         Spacer(modifier = Modifier.height(16.dp))
         // LAZY COLUMN is our whole scrolling feature, this allows us to scroll when the list gets too big for the screen
         LazyColumn {
@@ -163,14 +179,22 @@ fun LibraryScreen(navController: NavHostController) {
                     )
                     // "..." button with dropdown menu containing Share and Remove (placeholder)
                     MoreOptionsMenu(
-                        onShare = { // destUsername will be replaced with user input once we have pop up
+                        onShare = {
+                            // When share is clicked, save the playlist info and show the ShareDialog.
+                            // "id to name" is shorthand for Pair(id, name)
+                            selectedPlaylistForShare = id to name
+                            showShareDialog = true
+                        },
+
+                        // Previous code:
+                       /* onShare = { // destUsername will be replaced with user input once we have pop up
                             firestoreRepository.sharePlaylist(destUsername = "Thats Gonna Leave A Marc",
                                 playlistId = id,
                                 onSuccess = {
                                     Toast.makeText(context, "Shared playlist: $name", Toast.LENGTH_SHORT).show()
                                 }
                                 )
-                        },
+                        },*/
                         onRemove = {
                             firestoreRepository.removePlaylist(
                                 userId = selectedUserId!!,
@@ -182,12 +206,64 @@ fun LibraryScreen(navController: NavHostController) {
                             )
                         },
                         onEdit = {
-                            // Placeholder: no real removal logic
-                            Toast.makeText(context, "Edit clicked: $name", Toast.LENGTH_SHORT).show()
+                            // When "Edit" is clicked, store this playlist's data
+                            // "id to name" is shorthand for Pair(id, name)
+                            playlistToRename = id to name
+                            showRenameDialog = true
                         }
                     )
                 }
             }
         }
+    }
+
+    // This is for "Share"
+
+    if (showShareDialog && selectedPlaylistForShare != null) {
+    ShareDialog(
+        onDismiss = {
+            // When the dialog is dismissed, reset the share-related state
+            showShareDialog = false
+            selectedPlaylistForShare = null
+        },
+        onConfirm = { friendUsername ->
+            // [Firebase Placeholder]
+            // For now, just showing Toast message (can delete or keep)
+            Toast.makeText(
+                context,
+                "Shared playlist (${selectedPlaylistForShare!!.second}) with $friendUsername",
+                Toast.LENGTH_SHORT
+            ).show()
+            // Reset state after confirming
+            showShareDialog = false
+            selectedPlaylistForShare = null
+        }
+    )
+}
+
+    // This dialog is shown when "Edit" is selected on a playlist
+
+    if (showRenameDialog && playlistToRename != null) {
+        RenamePlaylistDialog(
+            currentName = playlistToRename!!.second, // Pre-populates with the existing playlist name
+            onDismiss = {
+                // Reset rename state when dismissed
+                showRenameDialog = false
+                playlistToRename = null
+            },
+            onConfirm = { newName ->
+                // [Firebase Placeholder]
+                // For now, just showing Toast message (can delete or keep)
+                Toast.makeText(
+                    context,
+                    "Playlist renamed to: $newName",
+                    Toast.LENGTH_SHORT
+                ).show()
+                // Reset state and refresh playlists
+                showRenameDialog = false
+                playlistToRename = null
+                localRefreshPlaylists()
+            }
+        )
     }
 }

@@ -26,7 +26,7 @@ import androidx.compose.ui.unit.dp
  */
 @Composable
 fun MoreOptionsMenu(
-    onShare: () -> Unit,
+    onShare: (() -> Unit)? = null,
     onRemove: () -> Unit,
     onEdit: () -> Unit, // New parameter for "Edit" option
     onTutorial: (() -> Unit)? = null  // New optional parameter
@@ -38,21 +38,21 @@ fun MoreOptionsMenu(
         IconButton(onClick = { expanded = true }) {
             Text(text = "...", fontSize = 20.sp , color = Color.White)
         }
-        // The DropdownMenu is displayed when "expanded" is true
         DropdownMenu(
             expanded = expanded,
             onDismissRequest = { expanded = false },
-            // Can adjust the offset to control the dropdowns position relative to the button
             offset = DpOffset((-10).dp, (-6).dp)
         ) {
-            // Option to Share
-            DropdownMenuItem(
-                text = { Text("Share") },
-                onClick = {
-                    expanded = false
-                    onShare()
-                }
-            )
+            // Only show the Share option if a callback is provided.
+            if (onShare != null) {
+                DropdownMenuItem(
+                    text = { Text("Share") },
+                    onClick = {
+                        expanded = false
+                        onShare()
+                    }
+                )
+            }
             // Option to Edit
             DropdownMenuItem(
                 text = { Text("Edit") },

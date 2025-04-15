@@ -147,7 +147,6 @@ fun WorkoutScreen(navController: NavController, playlistId: String) {
                 .fillMaxWidth()
         ) {
             // Example list of workouts with #Reps and #Sets
-            // In a real app, you might replace this with dynamic data
             items(playlist.value!!.workouts) { workout ->
                 val context = LocalContext.current
 
@@ -191,13 +190,7 @@ fun WorkoutScreen(navController: NavController, playlistId: String) {
                     }
 
                     MoreOptionsMenu(
-                        onShare = {
-                            Toast.makeText(
-                                context,
-                                "Share workout: ${workout.title}",
-                                Toast.LENGTH_SHORT
-                            ).show()
-                        },
+                        onShare = null,
                         onRemove = {
                             firestoreRepository.removeWorkout(
                                 playlistId = playlistId,
