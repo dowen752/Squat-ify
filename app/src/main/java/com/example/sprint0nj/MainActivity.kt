@@ -1,6 +1,7 @@
 package com.example.sprint0nj
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
@@ -29,20 +30,6 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Hardcoding playlists, will remove soon
-
-//        val firestoreRepository = FirestoreRepository()
-//        val myPlaylist = Playlist(id = "0003",
-//            name = "Leg Day",
-//            workouts = mutableListOf(
-//                WorkoutMods.addWorkout(1, "Squats", null, 8, 3, "Standard squats, focus on depth."),
-//                WorkoutMods.addWorkout(2, "Leg Extensions", null, 12, 3, "Moderate weight leg extensions."),
-//                WorkoutMods.addWorkout(3, "Machine Leg Curls", null, 12, 3, "Standard leg curls."),
-//                WorkoutMods.addWorkout(4, "Deadlifts", null, 12, 3, "Deadlifts with light to moderate weight.")
-//            )
-//        )
-//        firestoreRepository.postPlaylist(myPlaylist)
-
         setContent {
             AppNavHost()  // Show your NavHost here
         }
@@ -56,6 +43,7 @@ fun LibraryScreen(navController: NavHostController) {
     val firestoreRepository = remember { FirestoreRepository() }
     val playlists = remember { mutableStateOf<List<Pair<String, String>>>(emptyList()) }
     var selectedUserId = FirebaseAuth.getInstance().currentUser?.uid
+    var sharePlaylistID = ""
 
 
 
@@ -76,7 +64,7 @@ fun LibraryScreen(navController: NavHostController) {
 // State variable to control the display of the ShareDialog
     var showShareDialog by remember { mutableStateOf(false) }
 
-    // tate variable to hold the playlist information that will be shared
+    // State variable to hold the playlist information that will be shared
     var selectedPlaylistForShare by remember { mutableStateOf<Pair<String, String>?>(null) }
 
     // Controls the display of the rename dialog
@@ -182,7 +170,9 @@ fun LibraryScreen(navController: NavHostController) {
                         onShare = {
                             // When share is clicked, save the playlist info and show the ShareDialog.
                             // "id to name" is shorthand for Pair(id, name)
+                            sharePlaylistID = id
                             selectedPlaylistForShare = id to name
+                            sharePlaylistID = id
                             showShareDialog = true
                         },
 
@@ -228,12 +218,22 @@ fun LibraryScreen(navController: NavHostController) {
         },
         onConfirm = { friendUsername ->
             // [Firebase Placeholder]
+
+
+            val playlistID = sharePlaylistID
+
+            firestoreRepository.sharePlaylist(destUsername = friendUsername,
+                playlistId = playlistID,
+                onSuccess = {
+                    Toast.makeText(
+                        context,
+                        "Shared playlist (${selectedPlaylistForShare!!.second}) with $friendUsername",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            )
             // For now, just showing Toast message (can delete or keep)
-            Toast.makeText(
-                context,
-                "Shared playlist (${selectedPlaylistForShare!!.second}) with $friendUsername",
-                Toast.LENGTH_SHORT
-            ).show()
+
             // Reset state after confirming
             showShareDialog = false
             selectedPlaylistForShare = null
