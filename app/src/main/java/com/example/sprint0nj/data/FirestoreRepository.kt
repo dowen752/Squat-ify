@@ -178,11 +178,16 @@ class FirestoreRepository {
                         usersCollection.document(userId)
                             .update("playlistIds", currentPlaylists)
                             .addOnSuccessListener { onSuccess() }
+                            .addOnFailureListener {
+                                Log.d("FirestoreRepository", "not posting updated playlist list")
+                            }
                     } else{
                         onSuccess()
                     }
 
                 }
+            }.addOnFailureListener {
+                Log.d("FirestoreRepository", "finding username failing")
             }
 
 
