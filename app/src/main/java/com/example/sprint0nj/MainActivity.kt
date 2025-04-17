@@ -220,14 +220,24 @@ fun LibraryScreen(navController: NavHostController) {
             // [Firebase Placeholder]
 
 
-            val playlistID = sharePlaylistID
-
-            firestoreRepository.sharePlaylist(destUsername = friendUsername,
+            val playlistID = selectedPlaylistForShare?.first ?: "Not Working"
+            val playlistName = selectedPlaylistForShare?.second ?: "Unknown Playlist"
+            firestoreRepository.sharePlaylist(
+                destUsername = friendUsername,
                 playlistId = playlistID,
                 onSuccess = {
                     Toast.makeText(
                         context,
-                        "Shared playlist (${selectedPlaylistForShare!!.second}) with $friendUsername",
+                        "Shared $playlistName with $friendUsername",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    showShareDialog = false
+                    selectedPlaylistForShare = null
+                },
+                onFailure = {
+                    Toast.makeText(
+                        context,
+                        "User not found.",
                         Toast.LENGTH_SHORT
                     ).show()
                 }
@@ -235,8 +245,7 @@ fun LibraryScreen(navController: NavHostController) {
             // For now, just showing Toast message (can delete or keep)
 
             // Reset state after confirming
-            showShareDialog = false
-            selectedPlaylistForShare = null
+
         }
     )
 }

@@ -1,5 +1,7 @@
 package com.example.sprint0nj.data
 import android.util.Log
+import android.widget.Toast
+import androidx.compose.ui.platform.LocalContext
 import com.google.firebase.firestore.FirebaseFirestore
 import com.example.sprint0nj.data.Classes.Playlist
 import com.example.sprint0nj.data.Classes.Workout
@@ -162,7 +164,7 @@ class FirestoreRepository {
     }
 
 
-    fun sharePlaylist(destUsername: String, playlistId: String, onSuccess: () -> Unit){
+    fun sharePlaylist(destUsername: String, playlistId: String, onSuccess: () -> Unit, onFailure: () -> Unit){
 
         val usersCollection = db.collection("users")
         usersCollection.whereEqualTo("displayName", destUsername)
@@ -172,13 +174,14 @@ class FirestoreRepository {
                     val destUser = userSnapshot.documents.first()
                     val userId = destUser.id
 
-                    val currentPlaylists = destUser.get("playlistIds") as? MutableList<String> ?: mutableListOf()
+                    val currentPlaylists = (destUser.get("playlistIds") as? List<String>)?.toMutableList() ?: mutableListOf()
                     if(!currentPlaylists.contains(playlistId)){
                         currentPlaylists.add(playlistId)
                         usersCollection.document(userId)
                             .update("playlistIds", currentPlaylists)
                             .addOnSuccessListener { onSuccess() }
                             .addOnFailureListener {
+                                onFailure()
                                 Log.d("FirestoreRepository", "not posting updated playlist list")
                             }
                     } else{
@@ -186,8 +189,13 @@ class FirestoreRepository {
                     }
 
                 }
-            }.addOnFailureListener {
-                Log.d("FirestoreRepository", "finding username failing")
+                else{
+                    onFailure()
+                }
+            }
+            .addOnFailureListener { e ->
+                Log.d("FirestoreRepository", "finding username failing: ${e.message}")
+                onFailure()
             }
 
 
