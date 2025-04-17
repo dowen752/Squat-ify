@@ -1,5 +1,6 @@
 package com.example.sprint0nj
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.BasicTextField
@@ -39,7 +40,7 @@ fun ShareDialog(
     // Sample list of friend names
     // Can delete and fetch from Firebase instead
     val friendList = remember { mutableStateOf(listOf("Andrew", "Nick", "Davis", "Marc")) }
-
+    Log.d("ShareDialog", "Share Dialog entering correctly")
     AlertDialog(
         onDismissRequest = { onDismiss() },
         title = { Text("Share Playlist") },
@@ -99,6 +100,7 @@ fun ShareDialog(
         confirmButton = {
             Button(
                 onClick = {
+                    Log.d("ShareDialog", "Share Dialog reachingOnClick")
                     // Determine which friend username to use:
                     // If the manual text field is non-empty, use this
                     // Otherwise, use the friend selected from the dropdown
