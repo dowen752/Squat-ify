@@ -114,7 +114,10 @@ fun LoginScreen(navController: NavHostController) {
 //                        displayName = "TestUser",
 //                        onSuccess = {
 //                            Toast.makeText(context, "Worked", Toast.LENGTH_LONG).show()
-//                        }
+//                        },
+                          onFailure(
+                            
+                          )
 //                        )
 
 

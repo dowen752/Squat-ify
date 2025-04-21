@@ -134,7 +134,7 @@ class FirestoreRepository {
     }
 
     // Username and password are n o t saved in firestore. That info is stored in auth. When looking for users, use displayName to filter.
-    fun postUser(username: String, password: String, displayName: String, onSuccess: () -> Unit){
+    fun postUser(username: String, password: String, displayName: String, onSuccess: () -> Unit, onFailure: () -> Unit){
         val fakeImposterEmail = "${username}@squatify.com"
         FirebaseAuth.getInstance().createUserWithEmailAndPassword(fakeImposterEmail, password)
             .addOnSuccessListener{ result->
@@ -143,7 +143,7 @@ class FirestoreRepository {
                     val newUser = Classes.User(
                         userId = uid,
                         displayName = displayName,
-                        playlistIds = mutableListOf("c1f35457-a0ab-43eb-a38a-0f738bdac29d")
+                        playlistIds = mutableListOf("c1f35457-a0ab-43eb-a38a-0f738bdac29d") // Adds starter playlist to new user
                     )
 
                     db.collection("users").document(uid)
@@ -153,6 +153,7 @@ class FirestoreRepository {
                         }
                         .addOnFailureListener { firestoreError ->
                             Log.d("Firestore", "setting document no workie: ${firestoreError.message}")
+                            onFailure()
                         }
                 } else{
                     Log.d("Auth UID", "UID brokie")
@@ -160,6 +161,7 @@ class FirestoreRepository {
             }
             .addOnFailureListener { error ->
                 Log.d("Auth Auth", "Authentication brokie: ${error.message}")
+                onFailure()
             }
     }
 
