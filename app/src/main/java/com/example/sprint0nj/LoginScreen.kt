@@ -22,11 +22,13 @@ import coil.compose.rememberImagePainter
 import androidx.compose.foundation.Image
 import com.example.sprint0nj.data.FirestoreRepository
 import com.google.firebase.auth.FirebaseAuth
+import com.example.sprint0nj.RegisterDialog as RegisterDialog1 // android studio did this because it wasn't importing initially
 
 @Composable
 fun LoginScreen(navController: NavHostController) {
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var showRegisterDialog by remember { mutableStateOf(false) }
     val firestoreRepository = remember { FirestoreRepository()}
     val auth = FirebaseAuth.getInstance()
     val context = LocalContext.current
@@ -141,6 +143,17 @@ fun LoginScreen(navController: NavHostController) {
             ) {
                 Text("Log In", color = Color.White)
             }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Button(
+                onClick = { showRegisterDialog = true },
+                modifier = Modifier.width(200.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF212121))
+            ) {
+                Text("Register", color = Color.White)
+            }
+
         }
 
         Box(
@@ -155,7 +168,38 @@ fun LoginScreen(navController: NavHostController) {
                 }
         )
     }
-}
+    if (showRegisterDialog) {
+        RegisterDialog1(
+            onDismiss = {
+                showRegisterDialog = false
+            },
+            onConfirm = { newUsername, newPassword ->
+                // Firebase createUser logic
+                val email = "$newUsername@squatify.com"
+                auth.createUserWithEmailAndPassword(email, newPassword)
+                    .addOnCompleteListener { result ->
+                        if (result.isSuccessful) {
+                            Toast.makeText(
+                                context,
+                                "Registration successful!",
+                                Toast.LENGTH_LONG
+                            ).show()
+                        } else {
+
+                            Toast.makeText(
+                                context,
+                                "Registration failed: ${result.exception?.message}",
+                                Toast.LENGTH_LONG
+                            ).show()
+
+                        }
+                    }
+                showRegisterDialog = false
+
+            }
+        )
+    }
+    }
 
 @Composable
 fun PreviewLoginScreen() {
