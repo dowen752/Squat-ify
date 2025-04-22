@@ -1,17 +1,6 @@
 package com.example.sprint0nj.data
 
 class Classes {
-    data class Workout(
-        val id: String = "",
-        var title: String = "",
-        var duration: String? = null,
-        var reps: Int? = null,
-        var sets: Int? = null,
-        var description: String = "",
-        var target: String = "",
-        var tutorialLink: String = ""
-    )
-
     data class Playlist(
         val id: String = "",
         val name: String = "",
@@ -43,7 +32,7 @@ class Classes {
             sets: Int? = null,
             description: String = ""
         ): Workout {
-            return Classes.Workout(id, title, duration, reps, sets, description)
+            return Workout(id, title, duration, reps, sets, description)
         }
     }
 }

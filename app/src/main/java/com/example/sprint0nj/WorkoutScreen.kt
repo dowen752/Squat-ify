@@ -32,7 +32,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 // Import the separate MoreOptionsMenu composable from its own file.
 import com.example.sprint0nj.MoreOptionsMenu
-import com.example.sprint0nj.data.Classes.Workout
+import com.example.sprint0nj.data.Workout
 import kotlinx.coroutines.launch
 
 
@@ -221,7 +221,7 @@ fun WorkoutScreen(navController: NavController, playlistId: String) {
                             showWorkoutSelectionDialog = true
                         },
                         onTutorial = {
-                            navController.navigate("tutorial")
+                            navController.navigate("tutorial/${workout.id}")
                         }
                     )
                 }
