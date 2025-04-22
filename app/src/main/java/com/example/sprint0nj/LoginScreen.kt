@@ -109,21 +109,6 @@ fun LoginScreen(navController: NavHostController) {
                     }
                     val stupidDumbFakeEmail = "${username}@squatify.com"
 
-                    // can use this to make new users
-//                    firestoreRepository.postUser(
-//                        username = username,
-//                        password = password,
-//                        displayName = "TestUser",
-//                        onSuccess = {
-//                            Toast.makeText(context, "Worked", Toast.LENGTH_LONG).show()
-//                        },
-                          onFailure(
-                            
-                          )
-//                        )
-
-
-
                     auth.signInWithEmailAndPassword(stupidDumbFakeEmail, password)
                         .addOnCompleteListener{ authentication ->
                             if(authentication.isSuccessful){
@@ -175,25 +160,18 @@ fun LoginScreen(navController: NavHostController) {
             },
             onConfirm = { newUsername, newPassword ->
                 // Firebase createUser logic
-                val email = "$newUsername@squatify.com"
-                auth.createUserWithEmailAndPassword(email, newPassword)
-                    .addOnCompleteListener { result ->
-                        if (result.isSuccessful) {
-                            Toast.makeText(
-                                context,
-                                "Registration successful!",
-                                Toast.LENGTH_LONG
-                            ).show()
-                        } else {
-
-                            Toast.makeText(
-                                context,
-                                "Registration failed: ${result.exception?.message}",
-                                Toast.LENGTH_LONG
-                            ).show()
-
-                        }
+                firestoreRepository.postUser(
+                    username = newUsername,
+                    password = newPassword,
+                    displayName = "$newUsername",
+                    onSuccess = {
+                        Toast.makeText(context, "Account Created Successfully.", Toast.LENGTH_LONG).show()
+                    },
+                    onFailure = {
+                        Toast.makeText(context, "There was an error creating your account.", Toast.LENGTH_LONG).show()
                     }
+
+                )
                 showRegisterDialog = false
 
             }
