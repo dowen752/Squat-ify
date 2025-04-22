@@ -2,12 +2,12 @@ package com.example.sprint0nj
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.sprint0nj.data.Workout
 import com.example.sprint0nj.data.FirestoreRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import android.util.Log
+import com.example.sprint0nj.data.Classes.Workout
 
 class WorkoutViewModel : ViewModel() {
 

@@ -2,11 +2,11 @@ package com.example.sprint0nj.data
 
 import android.util.Log
 import com.example.sprint0nj.data.Classes.Playlist
-import com.example.sprint0nj.data.Workout
 import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
+import com.example.sprint0nj.data.Classes.Workout
 
 class FirestoreRepository {
 

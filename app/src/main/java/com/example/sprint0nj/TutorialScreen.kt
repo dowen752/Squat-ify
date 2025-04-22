@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.navigation.NavHostController
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.sprint0nj.data.Classes.Workout
 
 @Composable
 fun TutorialScreen(navController: NavHostController, workoutId: String) {
