@@ -1,45 +1,42 @@
 package com.example.sprint0nj
 
+// Import the separate MoreOptionsMenu composable from its own file.
+import android.R.attr.fontWeight
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import androidx.compose.ui.platform.LocalContext
-import android.widget.Toast // "Toast" is an Android API used to display the short confirmation messages after clicking the buttons
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.navigation.compose.rememberNavController
-import com.example.sprint0nj.data.FirestoreRepository
 import com.example.sprint0nj.data.Classes.Playlist
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
-// Import the separate MoreOptionsMenu composable from its own file.
-import com.example.sprint0nj.MoreOptionsMenu
 import com.example.sprint0nj.data.Classes.Workout
-import kotlinx.coroutines.launch
-import androidx.compose.material3.Checkbox
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateMapOf
-import androidx.compose.ui.draw.scale
+import com.example.sprint0nj.data.FirestoreRepository
 import kotlinx.coroutines.delay
-import androidx.compose.material3.CheckboxDefaults // Add this import at the top if needed
+import kotlinx.coroutines.launch
 
 
 
@@ -89,11 +86,22 @@ fun WorkoutScreen(navController: NavController, playlistId: String) {
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFF4CAF50)) // Green background
-            .padding(16.dp),
+            .padding(top = 60.dp, bottom = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        //TITLE FOR THE PLAYLISTS
+        Text(
+            text = playlist.value?.name ?: "Unnamed Playlist",
+            fontSize = 32.sp,
+            color = Color.White,
+            modifier = Modifier
+                .align(Alignment.Start)
+                .padding(start = 16.dp)
+
+        )
+
         // Shifted this down
-        Spacer(modifier = Modifier.height(80.dp))
+        Spacer(modifier = Modifier.height(60.dp))
 
         if (playlist.value == null) { // Loading if playlist hasn't been fetched yet
             Text(text = "Loading...", fontSize = 20.sp, color = Color.Black)
@@ -103,24 +111,10 @@ fun WorkoutScreen(navController: NavController, playlistId: String) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = 16.dp),
+                .padding(bottom = 8.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = playlist.value?.name ?: "Unnamed Playlist",
-                fontSize = 24.sp,
-                color = Color.White
-            )
-
-            // Display the timer value:
-            Text(
-                text = " / Time: ${timerSeconds / 60}:${(timerSeconds % 60).toString().padStart(2, '0')}",
-                color = Color.White,
-                fontSize = 23.sp,
-                fontWeight = FontWeight.Medium,
-                modifier = Modifier.padding(top = 8.dp)
-            )
 
             Button(
                 onClick = { isTimerRunning = !isTimerRunning },
@@ -128,17 +122,34 @@ fun WorkoutScreen(navController: NavController, playlistId: String) {
                 shape = RoundedCornerShape(12.dp),
                 contentPadding = PaddingValues(0.dp), // Remove default padding
                 modifier = Modifier
-                    .size(56.dp) // Square button
+                    .width(66.dp)
+                    .height(56.dp)
+                    .padding(start = 12.dp)
             ) {
                 Text(
-                    if (isTimerRunning) "■" else "▶",
-                    fontSize = 32.sp,
+                    text = if (isTimerRunning) "■" else "▶",
+                    fontSize = 36.sp,
                     color = Color.White
                 )
             }
 
+            // Display the timer value:
+            Text(
+                text = "Time: ${timerSeconds / 60}:${(timerSeconds % 60).toString().padStart(2, '0')}",
+                color = Color.White,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Medium,
+                modifier = Modifier.padding(start = 12.dp)
+
+            )
+
             //button for adding workouts
-            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.TopEnd) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(end = 12.dp),
+                 contentAlignment = Alignment.TopEnd
+            ) {
                 // Use PlusButtonWithMenu without referencing workouts state.
                 PlusButtonWithMenu(
                     menuOptions = listOf(
@@ -289,7 +300,7 @@ fun WorkoutScreen(navController: NavController, playlistId: String) {
                 onClick = { navController.navigate("library") },
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF212121))
             ) {
-                Text("Library", color = Color.White)
+                Text("Home", color = Color.White)
             }
         }
     }
