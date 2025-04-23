@@ -208,7 +208,7 @@ fun WorkoutSelectionDialog(
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF212121))
                     ) {
                         Text(
-                            text = if (selectedTargetMuscle.isEmpty()) "Target Muscle" else selectedTargetMuscle,
+                            text = selectedTargetMuscle.ifEmpty { "Target Muscle" },
                             fontSize = 16.sp
                         )
                     }
@@ -349,7 +349,7 @@ fun PlusButtonWithMenu(
             onClick = { menuExpanded = true }, // When clicked, set menuExpanded to true to open the menu
             modifier = Modifier.size(56.dp),     // Set the fixed size of the button (can be adjusted).
             shape = RoundedCornerShape(12.dp),   // Rounded corners. Can change the dp value to alter curvature
-            colors = ButtonDefaults.buttonColors(containerColor = Color.Black), // Button background color
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF212121)), // Button background color
             contentPadding = PaddingValues(0.dp)  // Remove any internal padding for a tighter layout
         ) {
 
@@ -413,7 +413,7 @@ fun PlusButtonWithMenu(
                 availableWorkouts = workoutsList.value,
                 onDismiss = { showWorkoutDialog = false },
                 onConfirm = { workoutEntry ->
-                    // Replace the Toast with your Firestore integration code to add the workout.
+                    // Replace the Toast with your Fire store integration code to add the workout.
                     Toast.makeText(context, "Workout added: ${workoutEntry.name} with ${workoutEntry.reps} reps and ${workoutEntry.sets} sets", Toast.LENGTH_SHORT).show()
                 }
             )

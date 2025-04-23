@@ -17,6 +17,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.navigation.NavHostController
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.foundation.background
+import androidx.compose.ui.graphics.Color
+import androidx.compose.material3.ButtonDefaults
 import com.example.sprint0nj.data.Classes.Workout
 
 @Composable
@@ -35,13 +38,16 @@ fun TutorialScreen(navController: NavHostController, workoutId: String) {
     } else null
 
     Column(
-        modifier = Modifier.fillMaxSize().padding(16.dp),
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFF4CAF50)), // Green background
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
             text = workout?.title ?: "Loading workout title...",
             style = MaterialTheme.typography.headlineMedium,
-            modifier = Modifier.padding(bottom = 8.dp)
+            color = Color.White, // Set the text color to white
+            modifier = Modifier.padding(top = 32.dp, bottom = 8.dp)
         )
 
         Text(
@@ -76,6 +82,7 @@ fun TutorialScreen(navController: NavHostController, workoutId: String) {
                     val intent = Intent(Intent.ACTION_VIEW, Uri.parse(link))
                     context.startActivity(intent)
                 },
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF212121)),
                 modifier = Modifier.padding(top = 16.dp)
             ) {
                 Text("Open in Browser or YouTube")
