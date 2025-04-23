@@ -7,6 +7,7 @@ import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
 import com.example.sprint0nj.data.Classes.Workout
+import com.google.firebase.auth.FirebaseAuth
 
 class FirestoreRepository {
 

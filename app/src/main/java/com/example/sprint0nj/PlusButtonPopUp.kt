@@ -89,7 +89,7 @@ fun PlaylistNameDialog(
                     onDismiss() // Close the dialog after confirming
                 },
 
-                 colors = ButtonDefaults.buttonColors(containerColor = Color.Black),
+                colors = ButtonDefaults.buttonColors(containerColor = Color.Black),
                 // Can also modify the shape, padding, etc.
             ) {
                 // Customize the text style here (font size, color, etc.)
@@ -101,7 +101,7 @@ fun PlaylistNameDialog(
             Button(
                 onClick = { onDismiss() },
                 // For changing the Cancel button's appearance
-                 colors = ButtonDefaults.buttonColors(containerColor = Color.Black),
+                colors = ButtonDefaults.buttonColors(containerColor = Color.Black),
                 // Can add any padding or shape modifications here.
             ) {
                 Text("Cancel")
@@ -142,9 +142,8 @@ fun WorkoutSelectionDialog(
     val availableWorkouts = remember { mutableStateOf<List<Workout>>(emptyList())}
     val firestoreRepository = remember {FirestoreRepository()}
 //    val playlist = remember { mutableStateOf<Playlist?>(null) }
-
     var selectedUserId = "4dz7wUNpKHI0Br9lSg9o" // Will need to be updated to allow for multiple
-                                                // users instead of hardcoding
+    var selectedWorkoutObject by remember { mutableStateOf<Workout?>(null) }                       // users instead of hardcoding
 
     // Filters firestore list for targeted muscle
     val filteredWorkouts by remember(selectedTargetMuscle, availableWorkouts.value) {
@@ -190,6 +189,7 @@ fun WorkoutSelectionDialog(
                                 text = { Text(workout.title) },
                                 onClick = {
                                     selectedWorkout = workout.title
+                                    selectedWorkoutObject = workout
                                     isDropdownExpanded = false
                                     repsText = workout.reps?.toString() ?: "-"
                                     setsText = workout.sets?.toString() ?: "-"
@@ -260,7 +260,7 @@ fun WorkoutSelectionDialog(
                             // Add operation: add a new workout
                             playlist.workouts.add(
                                 Workout(
-                                    id = UUID.randomUUID().toString(),
+                                    id = selectedWorkoutObject?.id ?: "0000",
                                     title = selectedWorkout,
                                     reps = reps,
                                     sets = sets,
@@ -296,9 +296,9 @@ fun WorkoutSelectionDialog(
                         }
 
                         firestoreRepository.postPlaylist(
-                    playlist = playlist,
-                    userId = selectedUserId
-                )
+                            playlist = playlist,
+                            userId = selectedUserId
+                        )
                         onConfirm(workoutEntry)
                         onDismiss()
                     }
@@ -343,7 +343,7 @@ fun PlusButtonWithMenu(
     Box(modifier = Modifier.wrapContentSize(Alignment.TopEnd)) {
 
 
-       // Plus Button:
+        // Plus Button:
         // This button displays a "+" symbol and triggers the dropdown menu when clicked
         Button(
             onClick = { menuExpanded = true }, // When clicked, set menuExpanded to true to open the menu
