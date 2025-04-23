@@ -37,7 +37,10 @@ import kotlinx.coroutines.launch
 import androidx.compose.material3.Checkbox
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.ui.draw.scale
 import kotlinx.coroutines.delay
+import androidx.compose.material3.CheckboxDefaults // Add this import at the top if needed
+
 
 
 @Composable
@@ -110,6 +113,31 @@ fun WorkoutScreen(navController: NavController, playlistId: String) {
                 color = Color.White
             )
 
+            // Display the timer value:
+            Text(
+                text = " / Time: ${timerSeconds / 60}:${(timerSeconds % 60).toString().padStart(2, '0')}",
+                color = Color.White,
+                fontSize = 23.sp,
+                fontWeight = FontWeight.Medium,
+                modifier = Modifier.padding(top = 8.dp)
+            )
+
+            Button(
+                onClick = { isTimerRunning = !isTimerRunning },
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF212121)),
+                shape = RoundedCornerShape(12.dp),
+                contentPadding = PaddingValues(0.dp), // Remove default padding
+                modifier = Modifier
+                    .size(56.dp) // Square button
+            ) {
+                Text(
+                    if (isTimerRunning) "■" else "▶",
+                    fontSize = 32.sp,
+                    color = Color.White
+                )
+            }
+
+            //button for adding workouts
             Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.TopEnd) {
                 // Use PlusButtonWithMenu without referencing workouts state.
                 PlusButtonWithMenu(
@@ -175,11 +203,22 @@ fun WorkoutScreen(navController: NavController, playlistId: String) {
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     // Left placeholder icon/box
+                    //CHECKBOX TO MARK WORKOUTS DONE
                     Box(
-                        modifier = Modifier
-                            .size(32.dp)
-                            .background(Color.Gray, RoundedCornerShape(4.dp))
-                    )
+                        modifier = Modifier.scale(1.5f) // Scale up the checkbox
+                    ) {
+                        Checkbox(
+                            checked = checkedWorkouts[workout.id] == true,
+                            onCheckedChange = { isChecked ->
+                                checkedWorkouts[workout.id] = isChecked
+                            },
+                            colors = CheckboxDefaults.colors(
+                                checkedColor = Color(0xFF4CAF50), // Green fill when checked
+                                uncheckedColor = Color.White,     // White border when unchecked
+                                checkmarkColor = Color.Black      // Color of the checkmark itself
+                            )
+                        )
+                    }
 
                     // Workout details
                     Column(
@@ -203,13 +242,6 @@ fun WorkoutScreen(navController: NavController, playlistId: String) {
                             )
                         }
                     }
-                    //CHECKBOX TO MARK WORKOUTS DONE
-                    Checkbox(
-                        checked = checkedWorkouts[workout.id] == true,
-                        onCheckedChange = { isChecked ->
-                            checkedWorkouts[workout.id] = isChecked
-                        }
-                    )
 
                     MoreOptionsMenu(
                         onShare = null,
@@ -242,28 +274,6 @@ fun WorkoutScreen(navController: NavController, playlistId: String) {
                 }
             }
         }
-
-        Button(
-            onClick = { isTimerRunning = !isTimerRunning },
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF212121)),
-            shape = RoundedCornerShape(12.dp),
-            modifier = Modifier.size(56.dp)
-        ) {
-            Text(
-                if (isTimerRunning) "■" else "▶",
-                fontSize = 24.sp,
-                color = Color.White
-            )
-        }
-
-        // Display the timer value:
-        Text(
-            text = "Time: ${timerSeconds / 60}:${(timerSeconds % 60).toString().padStart(2, '0')}",
-            color = Color.White,
-            modifier = Modifier.padding(top = 8.dp)
-        )
-
-
 
         Spacer(modifier = Modifier.height(16.dp))
 
