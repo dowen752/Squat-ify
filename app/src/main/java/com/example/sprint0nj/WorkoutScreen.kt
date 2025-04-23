@@ -34,6 +34,10 @@ import androidx.compose.runtime.setValue
 import com.example.sprint0nj.MoreOptionsMenu
 import com.example.sprint0nj.data.Classes.Workout
 import kotlinx.coroutines.launch
+import androidx.compose.material3.Checkbox
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateMapOf
+import kotlinx.coroutines.delay
 
 
 @Composable
@@ -43,6 +47,17 @@ fun WorkoutScreen(navController: NavController, playlistId: String) {
     val firestoreRepository = remember { FirestoreRepository()}
     val scope = rememberCoroutineScope()
     val playlist = remember { mutableStateOf<Playlist?>(null) }
+    val checkedWorkouts = remember { mutableStateMapOf<String, Boolean>() }
+    var timerSeconds by remember { mutableIntStateOf(0) }
+    var isTimerRunning by remember { mutableStateOf(false) }
+
+    //THIS CONTROLS THE TIMER COUNTING UP
+    LaunchedEffect(isTimerRunning) {
+        while (isTimerRunning) {
+            delay(1000)
+            timerSeconds++
+        }
+    }
 
     // State to hold the workout entry for editing; if null, we're in add mode
     var workoutToEdit by remember { mutableStateOf<WorkoutEntry?>(null) }
@@ -147,7 +162,6 @@ fun WorkoutScreen(navController: NavController, playlistId: String) {
                 .fillMaxWidth()
         ) {
             // Example list of workouts with #Reps and #Sets
-            // In a real app, you might replace this with dynamic data
             items(playlist.value!!.workouts) { workout ->
                 val context = LocalContext.current
 
@@ -189,15 +203,16 @@ fun WorkoutScreen(navController: NavController, playlistId: String) {
                             )
                         }
                     }
+                    //CHECKBOX TO MARK WORKOUTS DONE
+                    Checkbox(
+                        checked = checkedWorkouts[workout.id] == true,
+                        onCheckedChange = { isChecked ->
+                            checkedWorkouts[workout.id] = isChecked
+                        }
+                    )
 
                     MoreOptionsMenu(
-                        onShare = {
-                            Toast.makeText(
-                                context,
-                                "Share workout: ${workout.title}",
-                                Toast.LENGTH_SHORT
-                            ).show()
-                        },
+                        onShare = null,
                         onRemove = {
                             firestoreRepository.removeWorkout(
                                 playlistId = playlistId,
@@ -227,6 +242,27 @@ fun WorkoutScreen(navController: NavController, playlistId: String) {
                 }
             }
         }
+
+        Button(
+            onClick = { isTimerRunning = !isTimerRunning },
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF212121)),
+            shape = RoundedCornerShape(12.dp),
+            modifier = Modifier.size(56.dp)
+        ) {
+            Text(
+                if (isTimerRunning) "■" else "▶",
+                fontSize = 24.sp,
+                color = Color.White
+            )
+        }
+
+        // Display the timer value:
+        Text(
+            text = "Time: ${timerSeconds / 60}:${(timerSeconds % 60).toString().padStart(2, '0')}",
+            color = Color.White,
+            modifier = Modifier.padding(top = 8.dp)
+        )
+
 
 
         Spacer(modifier = Modifier.height(16.dp))
