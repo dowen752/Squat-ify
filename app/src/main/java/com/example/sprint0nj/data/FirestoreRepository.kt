@@ -131,4 +131,94 @@ class FirestoreRepository {
             Log.e("Firestore", "Failed to remove playlist: ${it.message}")
         }
     }
+    
+    
+    // Username and password are n o t saved in firestore. That info is stored in auth. When looking for users, use displayName to filter.
+    fun postUser(username: String, password: String, displayName: String, onSuccess: () -> Unit,  onFailure: () -> Unit){
+        val fakeImposterEmail = "${username}@squatify.com"
+        FirebaseAuth.getInstance().createUserWithEmailAndPassword(fakeImposterEmail, password)
+            .addOnSuccessListener{ result->
+                val uid = result.user?.uid
+                if(uid != null){
+                    val newUser = Classes.User(
+                        userId = uid,
+                        displayName = displayName,
+                        playlistIds = mutableListOf("c1f35457-a0ab-43eb-a38a-0f738bdac29d")
+                    )
+
+                    db.collection("users").document(uid)
+                        .set(newUser)
+                        .addOnSuccessListener {
+                            onSuccess()
+                        }
+                        .addOnFailureListener { firestoreError ->
+                            Log.d("Firestore", "setting document no workie: ${firestoreError.message}")
+                            onFailure()
+                        }
+                } else{
+                    onFailure()
+                    Log.d("Auth UID", "UID brokie")
+                }
+            }
+            .addOnFailureListener { error ->
+                Log.d("Auth Auth", "Authentication brokie: ${error.message}")
+                onFailure()
+            }
+    }
+
+
+    fun sharePlaylist(destUsername: String, playlistId: String, onSuccess: () -> Unit, onFailure: () -> Unit){
+
+        val usersCollection = db.collection("users")
+        usersCollection.whereEqualTo("displayName", destUsername)
+            .get()
+            .addOnSuccessListener { userSnapshot ->
+                if(!userSnapshot.isEmpty){
+                    val destUser = userSnapshot.documents.first()
+                    val userId = destUser.id
+
+                    val currentPlaylists = (destUser.get("playlistIds") as? List<String>)?.toMutableList() ?: mutableListOf()
+                    if(!currentPlaylists.contains(playlistId)){
+                        currentPlaylists.add(playlistId)
+                        usersCollection.document(userId)
+                            .update("playlistIds", currentPlaylists)
+                            .addOnSuccessListener { onSuccess() }
+                            .addOnFailureListener {
+                                onFailure()
+                                Log.d("FirestoreRepository", "not posting updated playlist list")
+                            }
+                    } else{
+                        onSuccess()
+                    }
+
+                }
+                else{
+                    onFailure()
+                }
+            }
+            .addOnFailureListener { e ->
+                Log.d("FirestoreRepository", "finding username failing: ${e.message}")
+                onFailure()
+            }
+
+
+
+    }
+
+// Takes all data from one user and imposes it on another, not really needed unless switching usernames and passwords
+    fun switchingUsers(){
+        val newUid = FirebaseAuth.getInstance().currentUser?.uid
+        val legacyUid = "4dz7wUNpKHI0Br9lSg9o" // your test UID
+
+        val users = db.collection("users")
+        users.document(newUid!!).get().addOnSuccessListener { newDoc ->
+            if (!newDoc.exists()) {
+                users.document(legacyUid).get().addOnSuccessListener { legacyDoc ->
+                    if (legacyDoc.exists()) {
+                        users.document(newUid).set(legacyDoc.data!!)
+                    }
+                }
+            }
+        }
+    }
 }

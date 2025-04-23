@@ -31,6 +31,7 @@ import androidx.compose.ui.platform.LocalContext
 import com.example.sprint0nj.data.Classes.Playlist
 import com.example.sprint0nj.data.Classes.Workout
 import com.example.sprint0nj.data.FirestoreRepository
+import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
 import java.util.UUID
 
@@ -51,8 +52,7 @@ fun PlaylistNameDialog(
     val context = LocalContext.current
     var playlistName by remember { mutableStateOf(TextFieldValue("")) }
     val firestoreRepository = remember { FirestoreRepository() }
-    val selectedUserId = "4dz7wUNpKHI0Br9lSg9o" // Will need to be updated to allow for multiple
-                                                // users instead of hardcoding
+    var selectedUserId = FirebaseAuth.getInstance().currentUser?.uid
 
     AlertDialog(
         onDismissRequest = { onDismiss() },
@@ -77,7 +77,7 @@ fun PlaylistNameDialog(
                     )
                     firestoreRepository.postPlaylist(
                         playlist = playlist,
-                        userId = selectedUserId,
+                        userId = selectedUserId!!,
                         onSuccess = {
                             val name = playlist.name
                             Toast.makeText(context, "Added playlist: $name", Toast.LENGTH_SHORT).show()
@@ -127,9 +127,9 @@ fun WorkoutSelectionDialog(
     onDismiss: () -> Unit,
     onConfirm: (WorkoutEntry) -> Unit
 ) {
-    var selectedWorkout by remember { mutableStateOf("") }
-    var repsText by remember { mutableStateOf("") }
-    var setsText by remember { mutableStateOf("") }
+    var selectedWorkout by remember { mutableStateOf(initialWorkout?.name ?: "") }
+    var repsText by remember { mutableStateOf(initialWorkout?.reps?.toString() ?: "") }
+    var setsText by remember { mutableStateOf(initialWorkout?.sets?.toString() ?: "") }
 
     // State for the Target Muscle button
     var selectedTargetMuscle by remember { mutableStateOf("") }
