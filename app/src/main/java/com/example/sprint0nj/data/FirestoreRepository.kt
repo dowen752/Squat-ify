@@ -2,17 +2,12 @@ package com.example.sprint0nj.data
 
 import android.util.Log
 import com.example.sprint0nj.data.Classes.Playlist
-import android.widget.Toast
-import androidx.compose.ui.platform.LocalContext
-import com.google.firebase.firestore.FirebaseFirestore
-import com.example.sprint0nj.data.Classes.Playlist
-import com.example.sprint0nj.data.Classes.Workout
-import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
 import com.example.sprint0nj.data.Classes.Workout
+import com.google.firebase.auth.FirebaseAuth
 
 class FirestoreRepository {
 
@@ -80,7 +75,9 @@ class FirestoreRepository {
     suspend fun fetchWorkouts(): List<Workout> {
         return try {
             val snapshot = workoutsCollection.get().await()
-            snapshot.documents.mapNotNull { it.toObject(Workout::class.java) }
+            snapshot.documents.mapNotNull { doc ->
+                doc.toObject(Workout::class.java)?.copy(id = doc.id)
+            }
         } catch (e: Exception) {
             Log.e("Firestore", "Error fetching workouts: ${e.message}")
             emptyList()
@@ -127,13 +124,6 @@ class FirestoreRepository {
         val userRef = db.collection("users").document(userId)
 
         db.runBatch { batch ->
-
-        // Reference to the playlist document
-        val playlistRef = playlistsCollection.document(playlistId)
-        val userRef = db.collection("users").document(userId)
-
-        db.runBatch{ batch ->
-            // Delete the playlist document
             batch.delete(playlistRef)
             batch.update(userRef, "playlistIds", FieldValue.arrayRemove(playlistId))
         }.addOnSuccessListener {
@@ -142,7 +132,8 @@ class FirestoreRepository {
             Log.e("Firestore", "Failed to remove playlist: ${it.message}")
         }
     }
-
+    
+    
     // Username and password are n o t saved in firestore. That info is stored in auth. When looking for users, use displayName to filter.
     fun postUser(username: String, password: String, displayName: String, onSuccess: () -> Unit,  onFailure: () -> Unit){
         val fakeImposterEmail = "${username}@squatify.com"
@@ -231,5 +222,4 @@ class FirestoreRepository {
             }
         }
     }
-
 }
