@@ -236,7 +236,7 @@ fun WorkoutScreen(navController: NavController, playlistId: String) {
                             showWorkoutSelectionDialog = true
                         },
                         onTutorial = {
-                            navController.navigate("tutorial")
+                            navController.navigate("tutorial/${workout.id}")
                         }
                     )
                 }

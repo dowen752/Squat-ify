@@ -1,5 +1,7 @@
 package com.example.sprint0nj.data
+
 import android.util.Log
+import com.example.sprint0nj.data.Classes.Playlist
 import android.widget.Toast
 import androidx.compose.ui.platform.LocalContext
 import com.google.firebase.firestore.FirebaseFirestore
@@ -8,115 +10,123 @@ import com.example.sprint0nj.data.Classes.Workout
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.FieldValue
-import kotlinx.coroutines.channels.awaitClose
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.callbackFlow
+import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
-
+import com.example.sprint0nj.data.Classes.Workout
 
 class FirestoreRepository {
 
     private val db = FirebaseFirestore.getInstance()
     private val playlistsCollection = db.collection("playlists")
+    private val workoutsCollection = db.collection("Workouts")
 
-    // Fetching pair of all playlist ids and names, for displaying in library screen
+    // Fetching pair of all playlist IDs and names for the Library screen
     fun fetchPlaylistSummaries(userId: String, onResult: (List<Pair<String, String>>) -> Unit) {
         val userRef = db.collection("users").document(userId)
 
         userRef.get().addOnSuccessListener { document ->
             if (document.exists()) {
-                val playlistIds = document.get("playlistIds") as? List<String> ?: emptyList() // If null, empty list
-
-                if (playlistIds.isEmpty()) { // Handling edge cases
+                val playlistIds = document.get("playlistIds") as? List<String> ?: emptyList()
+                if (playlistIds.isEmpty()) {
                     onResult(emptyList())
                     return@addOnSuccessListener
                 }
 
-                db.collection("playlists") // Searching playlists collection with list of user's playlist ids
+                playlistsCollection
                     .whereIn(FieldPath.documentId(), playlistIds)
                     .get()
-                    .addOnSuccessListener { summaryQuery ->
-                        val summaries = summaryQuery.documents.mapNotNull { doc -> // mapping playlist summaries
-                            val name = doc.getString("name")
-                            if (name != null) doc.id to name else null
+                    .addOnSuccessListener { querySnapshot ->
+                        val summaries = querySnapshot.documents.mapNotNull { doc ->
+                            doc.getString("name")?.let { name -> doc.id to name }
                         }
                         onResult(summaries)
                     }
             } else {
-                onResult(emptyList())  // No user doc = no playlists
+                onResult(emptyList())
             }
         }.addOnFailureListener {
-            onResult(emptyList())  // In case of any error
+            Log.e("Firestore", "Failed to fetch playlist summaries: ${it.message}")
+            onResult(emptyList())
         }
     }
 
-
-
-    // Function to add a playlist to Firestore using provided playlist
-    fun postPlaylist(playlist: Playlist, userId: String,  onSuccess: () -> Unit = {}) {
+    // Add a new playlist and update the user's playlist list
+    fun postPlaylist(playlist: Playlist, userId: String, onSuccess: () -> Unit = {}) {
         val playlistRef = playlistsCollection.document(playlist.id)
         val userRef = db.collection("users").document(userId)
 
         db.runBatch { batch ->
-            // Save the playlist
             batch.set(playlistRef, playlist)
-
-            // Add this playlist ID to the user's list
             batch.update(userRef, "playlistIds", FieldValue.arrayUnion(playlist.id))
-
         }.addOnSuccessListener {
             onSuccess()
+        }.addOnFailureListener {
+            Log.e("Firestore", "Failed to post playlist: ${it.message}")
         }
     }
 
-
-    // Fetches playlist by specified id. Used for displaying individual workout pages
+    // Fetch a single playlist by its ID
     suspend fun fetchPlaylist(playlistId: String): Playlist? {
         return try {
             val document = playlistsCollection.document(playlistId).get().await()
-            if (document.exists()) {
-                document.toObject(Playlist::class.java)
-            } else {
-                null
-            }
+            document.toObject(Playlist::class.java)
         } catch (e: Exception) {
+            Log.e("Firestore", "Error fetching playlist $playlistId: ${e.message}")
             null
         }
     }
 
-    // Maps firestore workout document to Classes.Workout object
+    // Fetch all workouts from Firestore
     suspend fun fetchWorkouts(): List<Workout> {
-        val snapshot = db.collection("Workouts").get().await()
-        return snapshot.documents.mapNotNull { doc ->
-            doc.toObject(Workout::class.java)
+        return try {
+            val snapshot = workoutsCollection.get().await()
+            snapshot.documents.mapNotNull { it.toObject(Workout::class.java) }
+        } catch (e: Exception) {
+            Log.e("Firestore", "Error fetching workouts: ${e.message}")
+            emptyList()
         }
     }
 
-
-    // Removes given workout from playlist in firestore
-    fun removeWorkout(
-        playlistId: String,
-        workoutId: String,
-        onSuccess: () -> Unit = {} // On success, needs to then update UI and give toast message
-    ) {
-        val playlist = playlistsCollection.document(playlistId)
-
-        playlist.get().addOnSuccessListener { document ->
-            if (document != null && document.exists()) {
-                val playlistObj = document.toObject(Playlist::class.java)
-                val updatedWorkouts = playlistObj?.workouts?.filter { it.id != workoutId }
-
-                playlist.update("workouts", updatedWorkouts)
-                    .addOnSuccessListener {
-                        Log.d("Firestore", "Workout removed successfully")
-                        onSuccess()
-                    }
+    // Fetch a single workout by its ID — used for tutorial screen
+    suspend fun fetchWorkoutById(workoutId: String): Workout? {
+        return try {
+            val doc = db.collection("Workouts").document(workoutId).get().await()
+            if (doc.exists()) {
+                doc.toObject(Workout::class.java)
+            } else {
+                null
             }
+        } catch (e: Exception) {
+            Log.e("FirestoreRepository", "Error fetching workout: ${e.message}")
+            null
         }
     }
 
+    // Remove a workout from a specific playlist
+    fun removeWorkout(playlistId: String, workoutId: String, onSuccess: () -> Unit = {}) {
+        val playlistRef = playlistsCollection.document(playlistId)
 
+        playlistRef.get().addOnSuccessListener { document ->
+            val playlist = document.toObject(Playlist::class.java)
+            val updatedWorkouts = playlist?.workouts?.filter { it.id != workoutId }
+
+            playlistRef.update("workouts", updatedWorkouts).addOnSuccessListener {
+                Log.d("Firestore", "Workout removed successfully")
+                onSuccess()
+            }.addOnFailureListener {
+                Log.e("Firestore", "Failed to remove workout: ${it.message}")
+            }
+        }.addOnFailureListener {
+            Log.e("Firestore", "Failed to load playlist for workout removal: ${it.message}")
+        }
+    }
+
+    // Delete a playlist and remove its ID from the user's list
     fun removePlaylist(userId: String, playlistId: String, onSuccess: () -> Unit) {
+        val playlistRef = playlistsCollection.document(playlistId)
+        val userRef = db.collection("users").document(userId)
+
+        db.runBatch { batch ->
 
         // Reference to the playlist document
         val playlistRef = playlistsCollection.document(playlistId)
@@ -125,11 +135,11 @@ class FirestoreRepository {
         db.runBatch{ batch ->
             // Delete the playlist document
             batch.delete(playlistRef)
-
-            // Update the user's playlist list by removing this playlist ID
             batch.update(userRef, "playlistIds", FieldValue.arrayRemove(playlistId))
         }.addOnSuccessListener {
             onSuccess()
+        }.addOnFailureListener {
+            Log.e("Firestore", "Failed to remove playlist: ${it.message}")
         }
     }
 
@@ -221,6 +231,5 @@ class FirestoreRepository {
             }
         }
     }
-
 
 }
