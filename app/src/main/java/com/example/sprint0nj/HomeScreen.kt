@@ -1,4 +1,4 @@
-//THIS CODE WILL BE SAVED FOR SPRINT 2
+package com.example.sprint0nj//THIS CODE WILL BE SAVED FOR SPRINT 2
 /*
 
 package com.example.sprint0nj

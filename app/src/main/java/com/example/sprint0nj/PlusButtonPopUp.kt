@@ -28,9 +28,10 @@ import androidx.compose.ui.text.input.TextFieldValue
 import android.widget.Toast
 
 import androidx.compose.ui.platform.LocalContext
-import com.example.sprint0nj.data.Classes.Workout
 import com.example.sprint0nj.data.Classes.Playlist
+import com.example.sprint0nj.data.Classes.Workout
 import com.example.sprint0nj.data.FirestoreRepository
+import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
 import java.util.UUID
 
@@ -51,8 +52,7 @@ fun PlaylistNameDialog(
     val context = LocalContext.current
     var playlistName by remember { mutableStateOf(TextFieldValue("")) }
     val firestoreRepository = remember { FirestoreRepository() }
-    val selectedUserId = "4dz7wUNpKHI0Br9lSg9o" // Will need to be updated to allow for multiple
-                                                // users instead of hardcoding
+    var selectedUserId = FirebaseAuth.getInstance().currentUser?.uid
 
     AlertDialog(
         onDismissRequest = { onDismiss() },
@@ -77,7 +77,7 @@ fun PlaylistNameDialog(
                     )
                     firestoreRepository.postPlaylist(
                         playlist = playlist,
-                        userId = selectedUserId,
+                        userId = selectedUserId!!,
                         onSuccess = {
                             val name = playlist.name
                             Toast.makeText(context, "Added playlist: $name", Toast.LENGTH_SHORT).show()
@@ -89,7 +89,7 @@ fun PlaylistNameDialog(
                     onDismiss() // Close the dialog after confirming
                 },
 
-                 colors = ButtonDefaults.buttonColors(containerColor = Color.Black),
+                colors = ButtonDefaults.buttonColors(containerColor = Color.Black),
                 // Can also modify the shape, padding, etc.
             ) {
                 // Customize the text style here (font size, color, etc.)
@@ -101,7 +101,7 @@ fun PlaylistNameDialog(
             Button(
                 onClick = { onDismiss() },
                 // For changing the Cancel button's appearance
-                 colors = ButtonDefaults.buttonColors(containerColor = Color.Black),
+                colors = ButtonDefaults.buttonColors(containerColor = Color.Black),
                 // Can add any padding or shape modifications here.
             ) {
                 Text("Cancel")
@@ -127,9 +127,9 @@ fun WorkoutSelectionDialog(
     onDismiss: () -> Unit,
     onConfirm: (WorkoutEntry) -> Unit
 ) {
-    var selectedWorkout by remember { mutableStateOf("") }
-    var repsText by remember { mutableStateOf("") }
-    var setsText by remember { mutableStateOf("") }
+    var selectedWorkout by remember { mutableStateOf(initialWorkout?.name ?: "") }
+    var repsText by remember { mutableStateOf(initialWorkout?.reps?.toString() ?: "") }
+    var setsText by remember { mutableStateOf(initialWorkout?.sets?.toString() ?: "") }
 
     // State for the Target Muscle button
     var selectedTargetMuscle by remember { mutableStateOf("") }
@@ -142,9 +142,8 @@ fun WorkoutSelectionDialog(
     val availableWorkouts = remember { mutableStateOf<List<Workout>>(emptyList())}
     val firestoreRepository = remember {FirestoreRepository()}
 //    val playlist = remember { mutableStateOf<Playlist?>(null) }
-
     var selectedUserId = "4dz7wUNpKHI0Br9lSg9o" // Will need to be updated to allow for multiple
-                                                // users instead of hardcoding
+    var selectedWorkoutObject by remember { mutableStateOf<Workout?>(null) }                       // users instead of hardcoding
 
     // Filters firestore list for targeted muscle
     val filteredWorkouts by remember(selectedTargetMuscle, availableWorkouts.value) {
@@ -190,6 +189,7 @@ fun WorkoutSelectionDialog(
                                 text = { Text(workout.title) },
                                 onClick = {
                                     selectedWorkout = workout.title
+                                    selectedWorkoutObject = workout
                                     isDropdownExpanded = false
                                     repsText = workout.reps?.toString() ?: "-"
                                     setsText = workout.sets?.toString() ?: "-"
@@ -208,7 +208,7 @@ fun WorkoutSelectionDialog(
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF212121))
                     ) {
                         Text(
-                            text = if (selectedTargetMuscle.isEmpty()) "Target Muscle" else selectedTargetMuscle,
+                            text = selectedTargetMuscle.ifEmpty { "Target Muscle" },
                             fontSize = 16.sp
                         )
                     }
@@ -260,7 +260,7 @@ fun WorkoutSelectionDialog(
                             // Add operation: add a new workout
                             playlist.workouts.add(
                                 Workout(
-                                    id = UUID.randomUUID().toString(),
+                                    id = selectedWorkoutObject?.id ?: "0000",
                                     title = selectedWorkout,
                                     reps = reps,
                                     sets = sets,
@@ -296,9 +296,9 @@ fun WorkoutSelectionDialog(
                         }
 
                         firestoreRepository.postPlaylist(
-                    playlist = playlist,
-                    userId = selectedUserId
-                )
+                            playlist = playlist,
+                            userId = selectedUserId
+                        )
                         onConfirm(workoutEntry)
                         onDismiss()
                     }
@@ -343,13 +343,13 @@ fun PlusButtonWithMenu(
     Box(modifier = Modifier.wrapContentSize(Alignment.TopEnd)) {
 
 
-       // Plus Button:
+        // Plus Button:
         // This button displays a "+" symbol and triggers the dropdown menu when clicked
         Button(
             onClick = { menuExpanded = true }, // When clicked, set menuExpanded to true to open the menu
             modifier = Modifier.size(56.dp),     // Set the fixed size of the button (can be adjusted).
             shape = RoundedCornerShape(12.dp),   // Rounded corners. Can change the dp value to alter curvature
-            colors = ButtonDefaults.buttonColors(containerColor = Color.Black), // Button background color
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF212121)), // Button background color
             contentPadding = PaddingValues(0.dp)  // Remove any internal padding for a tighter layout
         ) {
 
@@ -413,7 +413,7 @@ fun PlusButtonWithMenu(
                 availableWorkouts = workoutsList.value,
                 onDismiss = { showWorkoutDialog = false },
                 onConfirm = { workoutEntry ->
-                    // Replace the Toast with your Firestore integration code to add the workout.
+                    // Replace the Toast with your Fire store integration code to add the workout.
                     Toast.makeText(context, "Workout added: ${workoutEntry.name} with ${workoutEntry.reps} reps and ${workoutEntry.sets} sets", Toast.LENGTH_SHORT).show()
                 }
             )
