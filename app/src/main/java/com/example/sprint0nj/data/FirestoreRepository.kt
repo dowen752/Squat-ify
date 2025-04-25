@@ -167,7 +167,7 @@ class FirestoreRepository {
             }
     }
 
-
+    // BRO JUST DO FETCHPLAYLISTBYID -> POSTPLAYLIST WITH A NEW UUID AND THEN SHARE THAT LIKE BRUH
     fun sharePlaylist(destUsername: String, playlistId: String, onSuccess: () -> Unit, onFailure: () -> Unit){
 
         val usersCollection = db.collection("users")
