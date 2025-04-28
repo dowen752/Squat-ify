@@ -168,42 +168,74 @@ class FirestoreRepository {
     }
 
     // BRO JUST DO FETCHPLAYLISTBYID -> POSTPLAYLIST WITH A NEW UUID AND THEN SHARE THAT LIKE BRUH
-    fun sharePlaylist(destUsername: String, playlistId: String, onSuccess: () -> Unit, onFailure: () -> Unit){
-
+    fun sharePlaylist(destUsername: String, playlistId: String, onSuccess: () -> Unit, onFailure: () -> Unit) {
         val usersCollection = db.collection("users")
+
+        // Fetch the destination user
         usersCollection.whereEqualTo("displayName", destUsername)
             .get()
             .addOnSuccessListener { userSnapshot ->
-                if(!userSnapshot.isEmpty){
+                if (!userSnapshot.isEmpty) {
                     val destUser = userSnapshot.documents.first()
-                    val userId = destUser.id
+                    val destUserId = destUser.id
 
-                    val currentPlaylists = (destUser.get("playlistIds") as? List<String>)?.toMutableList() ?: mutableListOf()
-                    if(!currentPlaylists.contains(playlistId)){
-                        currentPlaylists.add(playlistId)
-                        usersCollection.document(userId)
-                            .update("playlistIds", currentPlaylists)
-                            .addOnSuccessListener { onSuccess() }
-                            .addOnFailureListener {
+                    //  Fetch the original playlist
+                    playlistsCollection.document(playlistId).get()
+                        .addOnSuccessListener { playlistDoc ->
+                            val originalPlaylist = playlistDoc.toObject(Classes.Playlist::class.java)
+                            if (originalPlaylist != null) {
+                                // Create copy of the playlist with a new UUID
+                                val newPlaylist = originalPlaylist.copy(
+                                    id = db.collection("playlists").document().id, // Easier way to do UUID ofc I learn this now
+                                    name = "Copy of ${originalPlaylist.name}")
+
+                                // Post new playlist
+                                postPlaylist(newPlaylist, destUserId) {
+                                    // Add the new playlist ID to the destination user's playlistIds
+                                    usersCollection.document(destUserId)
+                                        .update("playlistIds", FieldValue.arrayUnion(newPlaylist.id))
+                                        .addOnSuccessListener { onSuccess() }
+                                        .addOnFailureListener { e ->
+                                            Log.e("Firestore", "Failed to update user playlist list: ${e.message}")
+                                            onFailure()
+                                        }
+                                }
+                            } else {
+                                Log.e("Firestore", "Original playlist not found")
                                 onFailure()
-                                Log.d("FirestoreRepository", "not posting updated playlist list")
                             }
-                    } else{
-                        onSuccess()
-                    }
+                        }
+                        .addOnFailureListener { e ->
+                            Log.e("Firestore", "Failed to fetch original playlist: ${e.message}")
+                            onFailure()
+                        }
 
-                }
-                else{
+                } else {
+                    Log.e("Firestore", "Destination user not found")
                     onFailure()
                 }
             }
             .addOnFailureListener { e ->
-                Log.d("FirestoreRepository", "finding username failing: ${e.message}")
+                Log.e("Firestore", "Failed to fetch destination user: ${e.message}")
                 onFailure()
             }
+    }
 
-
-
+    // Needs to get used for displaying friends list
+    suspend fun fetchUser(userId: String): Classes.User? {
+        return try{
+            val user = db.collection("Users").document(userId).get().await()
+            if(user.exists()){
+                user.toObject(Classes.User::class.java)
+            }
+            else{
+                null
+            }
+        }
+        catch(e: Exception){
+            Log.e("Firestore", "Error fetching user: ${e.message}")
+            null
+        }
     }
 
 // Takes all data from one user and imposes it on another, not really needed unless switching usernames and passwords
