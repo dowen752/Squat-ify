@@ -30,7 +30,8 @@ class Classes {
     data class User(
         val userId: String = "", // Will be a UUID on initialization
         val displayName: String = "", // Name or something
-        val playlistIds: MutableList<String> = mutableListOf() // List of playlist UUIDs associated with the user
+        val playlistIds: MutableList<String> = mutableListOf(), // List of playlist UUIDs associated with the user
+        val userFriends: MutableList<String> = mutableListOf()
     )
 
 }
