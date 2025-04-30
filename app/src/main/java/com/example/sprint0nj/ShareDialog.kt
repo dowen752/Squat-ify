@@ -19,6 +19,8 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import android.widget.Toast
+import com.example.sprint0nj.data.FirestoreRepository
+import com.google.firebase.auth.FirebaseAuth
 
 @Composable
 fun ShareDialog(
@@ -26,6 +28,7 @@ fun ShareDialog(
     onConfirm: (String) -> Unit  // This callback receives the friend's username to share with
 ) {
     val context = LocalContext.current
+    val firestoreRepository = remember { FirestoreRepository() }
 
     // State for manual entry of a friend's username
     var manualFriendName by remember { mutableStateOf(TextFieldValue("")) }
@@ -37,9 +40,21 @@ fun ShareDialog(
 
     var dropdownSelectedFriend by remember { mutableStateOf("") }
 
+    val friends = remember { mutableStateOf<List<String>>(emptyList()) }
+
+    val currentUserId = FirebaseAuth.getInstance().currentUser?.uid
+
+
     // Sample list of friend names
     // Can delete and fetch from Firebase instead
-    val friendList = remember { mutableStateOf(listOf("Andrew", "Nick", "Davis", "Marc")) }
+    LaunchedEffect(currentUserId) {
+        if (currentUserId != null) {
+            firestoreRepository.fetchFriendsList(currentUserId) { fetchedFriends ->
+                friends.value = fetchedFriends
+            }
+        }
+    }
+
     Log.d("ShareDialog", "Share Dialog entering correctly")
     AlertDialog(
         onDismissRequest = { onDismiss() },
@@ -80,7 +95,7 @@ fun ShareDialog(
                         onDismissRequest = { isFriendDropdownExpanded = false },
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        friendList.value.forEach { friend ->
+                        friends.value.forEach { friend ->
                             DropdownMenuItem(
                                 text = { Text(friend) },
                                 onClick = {
