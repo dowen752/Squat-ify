@@ -132,15 +132,21 @@ class FirestoreRepository {
             Log.e("Firestore", "Failed to remove playlist: ${it.message}")
         }
     }
-    
-    
+
+
     // Username and password are n o t saved in firestore. That info is stored in auth. When looking for users, use displayName to filter.
-    fun postUser(username: String, password: String, displayName: String, onSuccess: () -> Unit,  onFailure: () -> Unit){
+    fun postUser(
+        username: String,
+        password: String,
+        displayName: String,
+        onSuccess: () -> Unit,
+        onFailure: () -> Unit
+    ) {
         val fakeImposterEmail = "${username}@squatify.com"
         FirebaseAuth.getInstance().createUserWithEmailAndPassword(fakeImposterEmail, password)
-            .addOnSuccessListener{ result->
+            .addOnSuccessListener { result ->
                 val uid = result.user?.uid
-                if(uid != null){
+                if (uid != null) {
                     val newUser = Classes.User(
                         userId = uid,
                         displayName = displayName,
@@ -153,10 +159,13 @@ class FirestoreRepository {
                             onSuccess()
                         }
                         .addOnFailureListener { firestoreError ->
-                            Log.d("Firestore", "setting document no workie: ${firestoreError.message}")
+                            Log.d(
+                                "Firestore",
+                                "setting document no workie: ${firestoreError.message}"
+                            )
                             onFailure()
                         }
-                } else{
+                } else {
                     onFailure()
                     Log.d("Auth UID", "UID brokie")
                 }
@@ -168,7 +177,12 @@ class FirestoreRepository {
     }
 
     // BRO JUST DO FETCHPLAYLISTBYID -> POSTPLAYLIST WITH A NEW UUID AND THEN SHARE THAT LIKE BRUH
-    fun sharePlaylist(destUsername: String, playlistId: String, onSuccess: () -> Unit, onFailure: () -> Unit) {
+    fun sharePlaylist(
+        destUsername: String,
+        playlistId: String,
+        onSuccess: () -> Unit,
+        onFailure: () -> Unit
+    ) {
         val usersCollection = db.collection("users")
 
         // Fetch the destination user
@@ -182,21 +196,30 @@ class FirestoreRepository {
                     //  Fetch the original playlist
                     playlistsCollection.document(playlistId).get()
                         .addOnSuccessListener { playlistDoc ->
-                            val originalPlaylist = playlistDoc.toObject(Classes.Playlist::class.java)
+                            val originalPlaylist =
+                                playlistDoc.toObject(Classes.Playlist::class.java)
                             if (originalPlaylist != null) {
                                 // Create copy of the playlist with a new UUID
                                 val newPlaylist = originalPlaylist.copy(
-                                    id = db.collection("playlists").document().id, // Easier way to do UUID ofc I learn this now
-                                    name = "Copy of ${originalPlaylist.name}")
+                                    id = db.collection("playlists")
+                                        .document().id, // Easier way to do UUID ofc I learn this now
+                                    name = "Copy of ${originalPlaylist.name}"
+                                )
 
                                 // Post new playlist
                                 postPlaylist(newPlaylist, destUserId) {
                                     // Add the new playlist ID to the destination user's playlistIds
                                     usersCollection.document(destUserId)
-                                        .update("playlistIds", FieldValue.arrayUnion(newPlaylist.id))
+                                        .update(
+                                            "playlistIds",
+                                            FieldValue.arrayUnion(newPlaylist.id)
+                                        )
                                         .addOnSuccessListener { onSuccess() }
                                         .addOnFailureListener { e ->
-                                            Log.e("Firestore", "Failed to update user playlist list: ${e.message}")
+                                            Log.e(
+                                                "Firestore",
+                                                "Failed to update user playlist list: ${e.message}"
+                                            )
                                             onFailure()
                                         }
                                 }
@@ -223,23 +246,21 @@ class FirestoreRepository {
 
     // Needs to get used for displaying friends list
     suspend fun fetchUser(userId: String): Classes.User? {
-        return try{
+        return try {
             val user = db.collection("Users").document(userId).get().await()
-            if(user.exists()){
+            if (user.exists()) {
                 user.toObject(Classes.User::class.java)
-            }
-            else{
+            } else {
                 null
             }
-        }
-        catch(e: Exception){
+        } catch (e: Exception) {
             Log.e("Firestore", "Error fetching user: ${e.message}")
             null
         }
     }
 
-// Takes all data from one user and imposes it on another, not really needed unless switching usernames and passwords
-    fun switchingUsers(){
+    // Takes all data from one user and imposes it on another, not really needed unless switching usernames and passwords
+    fun switchingUsers() {
         val newUid = FirebaseAuth.getInstance().currentUser?.uid
         val legacyUid = "4dz7wUNpKHI0Br9lSg9o" // your test UID
 
@@ -252,6 +273,23 @@ class FirestoreRepository {
                     }
                 }
             }
+        }
+    }
+
+    fun fetchFriendsList(userId: String, onResult: (List<String>) -> Unit) {
+        val userRef = db.collection("users").document(userId)
+
+        userRef.get().addOnSuccessListener { document ->
+            if (document.exists()) {
+                val friendsList = document.get("userFriends") as? List<String> ?: emptyList()
+                onResult(friendsList)
+                return@addOnSuccessListener
+
+            }
+        }.addOnFailureListener {
+            Log.e("Firestore", "Failed to fetch friends list: ${it.message}")
+            onResult(emptyList())
+
         }
     }
 }
