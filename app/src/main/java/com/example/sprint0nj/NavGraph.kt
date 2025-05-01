@@ -22,6 +22,10 @@ fun AppNavHost(
             LibraryScreen(navController)
         }
 
+        composable("friends") {
+            FriendsScreen(navController)
+        }
+
         composable("workout/{playlistId}") { backStackEntry ->
             val playlistId = backStackEntry.arguments?.getString("playlistId")
             if (playlistId.isNullOrEmpty()) {
