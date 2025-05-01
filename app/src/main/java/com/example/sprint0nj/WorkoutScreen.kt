@@ -37,6 +37,14 @@ import com.example.sprint0nj.data.Classes.Workout
 import com.example.sprint0nj.data.FirestoreRepository
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import androidx.compose.runtime.DisposableEffect
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.LifecycleOwner
+import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.sprint0nj.WorkoutTimerViewModel
+import androidx.compose.runtime.collectAsState
 
 
 
@@ -48,14 +56,27 @@ fun WorkoutScreen(navController: NavController, playlistId: String) {
     val scope = rememberCoroutineScope()
     val playlist = remember { mutableStateOf<Playlist?>(null) }
     val checkedWorkouts = remember { mutableStateMapOf<String, Boolean>() }
-    var timerSeconds by remember { mutableIntStateOf(0) }
-    var isTimerRunning by remember { mutableStateOf(false) }
+    // This block will pause the timer when the screen is disposed or goes to background
+    val timerViewModel: WorkoutTimerViewModel = viewModel()
+    val timerSeconds by timerViewModel.timerSeconds.collectAsState()
+    val isTimerRunning by timerViewModel.isTimerRunning.collectAsState()
+    val lifecycleOwner = LocalLifecycleOwner.current
 
-    //THIS CONTROLS THE TIMER COUNTING UP
-    LaunchedEffect(isTimerRunning) {
-        while (isTimerRunning) {
-            delay(1000)
-            timerSeconds++
+
+    // This block will pause the timer when the screen is disposed or goes to background
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_PAUSE,
+                Lifecycle.Event.ON_STOP,
+                Lifecycle.Event.ON_DESTROY -> timerViewModel.pauseTimer()
+                else -> {}
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+            timerViewModel.pauseTimer()
         }
     }
 
@@ -117,10 +138,13 @@ fun WorkoutScreen(navController: NavController, playlistId: String) {
         ) {
 
             Button(
-                onClick = { isTimerRunning = !isTimerRunning },
+                onClick = {
+                    if (isTimerRunning) timerViewModel.pauseTimer()
+                    else timerViewModel.startTimer()
+                },
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF212121)),
                 shape = RoundedCornerShape(12.dp),
-                contentPadding = PaddingValues(0.dp), // Remove default padding
+                contentPadding = PaddingValues(0.dp),
                 modifier = Modifier
                     .width(66.dp)
                     .height(56.dp)
