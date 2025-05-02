@@ -186,30 +186,17 @@ fun WorkoutScreen(navController: NavController, playlistId: String) {
                         .padding(end = 12.dp),
                     contentAlignment = Alignment.TopEnd
                 ) {
-                    // Use PlusButtonWithMenu without referencing workouts state.
                     PlusButtonWithMenu(
                         menuOptions = listOf(
                             MenuOption("Add Workout") {
-                                // This callback is handled here:
                                 showWorkoutSelectionDialog = true
-                                // debug Toast:
-                                //Toast.makeText(context, "Add Workout callback triggered", Toast.LENGTH_SHORT).show()
-                            },
-                            MenuOption("Import Workout") {
-                                Toast.makeText(
-                                    context,
-                                    "Import Workout clicked",
-                                    Toast.LENGTH_SHORT
-                                ).show()
                             }
-                        ),
-                        onPlaylistAdded = {
 
-                        }
+                        )
+
                     )
                 }
             }
-
             // For list of workouts:
 
             // Display the WorkoutSelectionDialog if the state is true.
