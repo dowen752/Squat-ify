@@ -325,98 +325,51 @@ fun WorkoutSelectionDialog(
 // This component can be used in multiple screens by passing different lists of MenuOption items
 @Composable
 fun PlusButtonWithMenu(
-    menuOptions: List<MenuOption>,  // A list of menu options to display in the dropdown
-    onPlaylistAdded: () -> Unit
+    menuOptions: List<MenuOption>,
+    onPlaylistAdded: () -> Unit = {}
 ) {
-    // Local state to track whether the dropdown menu is currently expanded
     var menuExpanded by remember { mutableStateOf(false) }
-    // State to control the visibility of the Playlist dialog
-    var showPlaylistDialog by remember { mutableStateOf(false) }
-    // State to control the visibility of the Workout dialog
-    var showWorkoutDialog by remember { mutableStateOf(false) }
-    val firestoreRepository = remember { FirestoreRepository() }
-    // Capture the context once in this composable scope
-    val context = LocalContext.current
 
-    // Box is used as a container to anchor both the plus button and its dropdown menu
-    // The wrapContentSize with Alignment.TopEnd places content at the top-right corner
     Box(modifier = Modifier.wrapContentSize(Alignment.TopEnd)) {
-
-
-        // Plus Button:
-        // This button displays a "+" symbol and triggers the dropdown menu when clicked
         Button(
-            onClick = { menuExpanded = true }, // When clicked, set menuExpanded to true to open the menu
-            modifier = Modifier.size(56.dp),     // Set the fixed size of the button (can be adjusted).
-            shape = RoundedCornerShape(12.dp),   // Rounded corners. Can change the dp value to alter curvature
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF212121)), // Button background color
-            contentPadding = PaddingValues(0.dp)  // Remove any internal padding for a tighter layout
+            onClick = {
+                if (menuOptions.size == 1) {
+                    menuOptions[0].onClick()
+                } else {
+                    // otherwise show the dropdown
+                    menuExpanded = true
+                }
+            },
+            modifier = Modifier.size(56.dp),
+            shape = RoundedCornerShape(12.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = Color.White),
+            contentPadding = PaddingValues(0.dp)
         ) {
-
-            // Inner Box to center the "+" text inside the button
             Box(
-                modifier = Modifier.fillMaxSize(),        // Fill the available space inside the button
-                contentAlignment = Alignment.Center         // Center the text both vertically and horizontally
+                Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
             ) {
-                // Text displaying the plus sign
-                // Can adjust fontSize and fontWeight for customization
-                Text("+", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                Text("+", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = Color.Black)
             }
-        }
 
-
-        // DropdownMenu:
-        // This menu appears when menuExpanded is true and displays the list of menu options
-        DropdownMenu(
-            expanded = menuExpanded,                   // Controls whether the menu is visible
-            onDismissRequest = { menuExpanded = false }, // Callback to close the menu when clicked outside
-            // The offset positions the dropdown menu relative to the plus button
-            // Change the DpOffset values to adjust horizontal (x) or vertical (y) position
-            offset = DpOffset(0.dp, 0.dp)
-        ) {
-            // Loop through each menu option provided in the list
-            menuOptions.forEach { option ->
-                // Each option is displayed as a DropdownMenuItem
-                DropdownMenuItem(
-                    text = { Text(option.title) },
-                    onClick = {
-                        when (option.title) {
-                            "Add Playlist" -> {
-                                showPlaylistDialog = true // Show the playlist dialog
-                            }
-                            // "Add Workout" will now simply call the provided callback.
-                            else -> {
+            if (menuOptions.size > 1) {
+                DropdownMenu(
+                    expanded = menuExpanded,
+                    onDismissRequest = { menuExpanded = false },
+                    offset = DpOffset(0.dp, 0.dp)
+                ) {
+                    menuOptions.forEach { option ->
+                        DropdownMenuItem(
+                            text = { Text(option.title) },
+                            onClick = {
+                                menuExpanded = false
                                 option.onClick()
                             }
-                        }
-                        menuExpanded = false
+                        )
                     }
-                )
+                }
             }
         }
-
-        // Display the PlaylistNameDialog when showPlaylistDialog is true
-        if (showPlaylistDialog) {
-            PlaylistNameDialog(
-                onDismiss = { showPlaylistDialog = false },
-                onConfirm = { playlistName ->
-
-                    Toast.makeText(context, "Playlist added: $playlistName", Toast.LENGTH_SHORT).show()
-                },
-                onPlaylistAdded = onPlaylistAdded
-            )
-        }
-
-        /*if (showWorkoutDialog) {
-            // Pass the workouts list from Firebase.
-            WorkoutSelectionDialog(
-                availableWorkouts = workoutsList.value,
-                onDismiss = { showWorkoutDialog = false },
-                onConfirm = { workoutEntry ->
-                    // Replace the Toast with your Fire store integration code to add the workout.
-                    Toast.makeText(context, "Workout added: ${workoutEntry.name} with ${workoutEntry.reps} reps and ${workoutEntry.sets} sets", Toast.LENGTH_SHORT).show()
-                }
-            )
-        }*/
     }
 }
+

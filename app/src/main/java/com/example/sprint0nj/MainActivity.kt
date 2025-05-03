@@ -49,7 +49,8 @@ fun LibraryScreen(navController: NavHostController) {
     var sharePlaylistID = ""
     val currentUser = FirebaseAuth.getInstance().currentUser
     val displayName = currentUser?.displayName ?: currentUser?.email ?: "Unknown User"
-
+    var showPlaylistDialog by remember { mutableStateOf(false) }
+    var showAddDialog by remember { mutableStateOf(false) }
 
 
     val localRefreshPlaylists = {
@@ -147,33 +148,18 @@ fun LibraryScreen(navController: NavHostController) {
         }
         */
 
-            // A Box is used as a container that fills the available width
-            // The contentAlignment parameter ensures that the children (the plus button) is positioned at the top-right of the Box
-            // "Toast" is an Android API used to display the short confirmation messages after clicking the buttons
             Box(
-                modifier = Modifier.fillMaxWidth(),
+                Modifier.fillMaxWidth(),
                 contentAlignment = Alignment.TopEnd
             ) {
-                // Call the reusable PlusButtonWithMenu composable
-                // List of MenuOption objects is passed to define the menu items
                 PlusButtonWithMenu(
                     menuOptions = listOf(
-                        // First menu option with the title "Add Playlist"
-                        // When clicked, a Toast message is displayed
                         MenuOption("Add Playlist") {
-
-                            //Toast.makeText(context, "Add Playlist clicked", Toast.LENGTH_SHORT).show()
-                        },
-                        // Second menu option with the title "Import Playlist"
-                        // When clicked, a Toast message is displayed
-                        MenuOption("Import Playlist") {
-                            Toast.makeText(context, "Import Playlist clicked", Toast.LENGTH_SHORT)
-                                .show()
+                            // directly pop up your dialog
+                            showAddDialog = true
                         }
                     ),
-                    onPlaylistAdded = {
-                        localRefreshPlaylists()
-                    }
+                    onPlaylistAdded = { localRefreshPlaylists() }
                 )
             }
 
@@ -249,6 +235,19 @@ fun LibraryScreen(navController: NavHostController) {
                     }
                 }
             }
+        }
+
+        if (showAddDialog) {
+            PlaylistNameDialog(
+                onDismiss = { showAddDialog = false },
+                onConfirm = { newName ->
+                    // [Firebase placeholder] firestoreRepository.postPlaylist(...)
+                    Toast.makeText(context, "Playlist added: $newName", Toast.LENGTH_SHORT).show()
+                    localRefreshPlaylists()
+                    showAddDialog = false
+                },
+                onPlaylistAdded = { /*not used here*/ }
+            )
         }
 
         // This is for "Share"
