@@ -313,7 +313,7 @@ fun WorkoutScreen(navController: NavController, playlistId: String) {
                     }
                 }
             }
-
+            /* Home Button:
             Spacer(modifier = Modifier.height(16.dp))
 
             // Example bottom navigation row
@@ -330,7 +330,7 @@ fun WorkoutScreen(navController: NavController, playlistId: String) {
                 ) {
                     Text("Home", color = Color.White)
                 }
-            }
+            }*/
         }
     }
 }
