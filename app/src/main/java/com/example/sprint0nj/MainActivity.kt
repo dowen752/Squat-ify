@@ -132,7 +132,10 @@ fun LibraryScreen(navController: NavHostController) {
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+
+           /* Original Spacing for playlists and plus button
             Spacer(modifier = Modifier.height(80.dp))
+
 
             Text(
                 text = "My Playlists",
@@ -141,13 +144,6 @@ fun LibraryScreen(navController: NavHostController) {
                 modifier = Modifier.padding(bottom = 16.dp)
             )
 
-            //TAKES YOU TO HOME SCREEN
-            /*
-        Button(onClick = { navController.navigate("home") }) {
-            Text("Go to Home")
-        }
-        */
-
             Box(
                 Modifier.fillMaxWidth(),
                 contentAlignment = Alignment.TopEnd
@@ -155,7 +151,7 @@ fun LibraryScreen(navController: NavHostController) {
                 PlusButtonWithMenu(
                     menuOptions = listOf(
                         MenuOption("Add Playlist") {
-                            // directly pop up your dialog
+                            // directly pop up the dialog
                             showAddDialog = true
                         }
                     ),
@@ -164,7 +160,33 @@ fun LibraryScreen(navController: NavHostController) {
             }
 
 
+            Spacer(modifier = Modifier.height(16.dp))*/
+
+            // New spacing so "My Playlists" is left aligned
+            Spacer(modifier = Modifier.height(80.dp))
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = "My Playlists",
+                    fontSize = 28.sp,
+                    color = Color.White
+                )
+                PlusButtonWithMenu(
+                    menuOptions = listOf(
+                        MenuOption("Add Playlist") { showAddDialog = true }
+                    ),
+                    onPlaylistAdded = { localRefreshPlaylists() }
+                )
+            }
+
             Spacer(modifier = Modifier.height(16.dp))
+
             // LAZY COLUMN is our whole scrolling feature, this allows us to scroll when the list gets too big for the screen
             LazyColumn {
                 items(playlists.value) { (id, name) ->
