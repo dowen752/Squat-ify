@@ -4,6 +4,7 @@ package com.example.sprint0nj
 import android.R.attr.fontWeight
 import android.util.Log
 import android.widget.Toast
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -37,25 +38,48 @@ import com.example.sprint0nj.data.Classes.Workout
 import com.example.sprint0nj.data.FirestoreRepository
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-
+import androidx.compose.runtime.DisposableEffect
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.LifecycleOwner
+import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.sprint0nj.WorkoutTimerViewModel
+import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 
 
 @Composable
 fun WorkoutScreen(navController: NavController, playlistId: String) {
     // This captures the current context which is used in the callbacks for popup
     val context = LocalContext.current
-    val firestoreRepository = remember { FirestoreRepository()}
+    val firestoreRepository = remember { FirestoreRepository() }
     val scope = rememberCoroutineScope()
     val playlist = remember { mutableStateOf<Playlist?>(null) }
     val checkedWorkouts = remember { mutableStateMapOf<String, Boolean>() }
-    var timerSeconds by remember { mutableIntStateOf(0) }
-    var isTimerRunning by remember { mutableStateOf(false) }
+    // This block will pause the timer when the screen is disposed or goes to background
+    val timerViewModel: WorkoutTimerViewModel = viewModel()
+    val timerSeconds by timerViewModel.timerSeconds.collectAsState()
+    val isTimerRunning by timerViewModel.isTimerRunning.collectAsState()
+    val lifecycleOwner = LocalLifecycleOwner.current
 
-    //THIS CONTROLS THE TIMER COUNTING UP
-    LaunchedEffect(isTimerRunning) {
-        while (isTimerRunning) {
-            delay(1000)
-            timerSeconds++
+
+    // This block will pause the timer when the screen is disposed or goes to background
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_PAUSE,
+                Lifecycle.Event.ON_STOP,
+                Lifecycle.Event.ON_DESTROY -> timerViewModel.pauseTimer()
+
+                else -> {}
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+            timerViewModel.pauseTimer()
         }
     }
 
@@ -63,7 +87,7 @@ fun WorkoutScreen(navController: NavController, playlistId: String) {
     var workoutToEdit by remember { mutableStateOf<WorkoutEntry?>(null) }
 
     val localFetchPlaylist = {
-        scope.launch{
+        scope.launch {
             val updated = firestoreRepository.fetchPlaylist(playlistId)
             playlist.value = updated
         }
@@ -82,226 +106,231 @@ fun WorkoutScreen(navController: NavController, playlistId: String) {
 
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFF4CAF50)) // Green background
-            .padding(top = 60.dp, bottom = 16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        //TITLE FOR THE PLAYLISTS
-        Text(
-            text = playlist.value?.name ?: "Unnamed Playlist",
-            fontSize = 32.sp,
-            color = Color.White,
-            modifier = Modifier
-                .align(Alignment.Start)
-                .padding(start = 16.dp)
-
+    Box(modifier = Modifier.fillMaxSize()) {
+        Image(
+            painter = painterResource(id = R.drawable.squatmainbg),
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.fillMaxSize()
         )
 
-        // Shifted this down
-        Spacer(modifier = Modifier.height(60.dp))
-
-        if (playlist.value == null) { // Loading if playlist hasn't been fetched yet
-            Text(text = "Loading...", fontSize = 20.sp, color = Color.Black)
-            return@Column
-        }
-        // Top row with "Playlist #1" and a plus button on the right
-        Row(
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 8.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+                .fillMaxSize()
+                .padding(top = 60.dp, bottom = 16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-
-            Button(
-                onClick = { isTimerRunning = !isTimerRunning },
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF212121)),
-                shape = RoundedCornerShape(12.dp),
-                contentPadding = PaddingValues(0.dp), // Remove default padding
-                modifier = Modifier
-                    .width(66.dp)
-                    .height(56.dp)
-                    .padding(start = 12.dp)
-            ) {
-                Text(
-                    text = if (isTimerRunning) "■" else "▶",
-                    fontSize = 36.sp,
-                    color = Color.White
-                )
-            }
-
-            // Display the timer value:
+            //TITLE FOR THE PLAYLISTS
             Text(
-                text = "Time: ${timerSeconds / 60}:${(timerSeconds % 60).toString().padStart(2, '0')}",
+                text = playlist.value?.name ?: "Unnamed Playlist",
+                fontSize = 32.sp,
                 color = Color.White,
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Medium,
-                modifier = Modifier.padding(start = 12.dp)
+                modifier = Modifier
+                    .align(Alignment.Start)
+                    .padding(start = 16.dp)
 
             )
 
-            //button for adding workouts
-            Box(
+            // Shifted this down
+            Spacer(modifier = Modifier.height(60.dp))
+
+            if (playlist.value == null) { // Loading if playlist hasn't been fetched yet
+                Text(text = "Loading...", fontSize = 20.sp, color = Color.Black)
+                return@Column
+            }
+            // Top row with "Playlist #1" and a plus button on the right
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(end = 12.dp),
-                 contentAlignment = Alignment.TopEnd
+                    .padding(bottom = 8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                // Use PlusButtonWithMenu without referencing workouts state.
-                PlusButtonWithMenu(
-                    menuOptions = listOf(
-                        MenuOption("Add Workout") {
-                            // This callback is handled here:
-                            showWorkoutSelectionDialog = true
-                            // debug Toast:
-                            //Toast.makeText(context, "Add Workout callback triggered", Toast.LENGTH_SHORT).show()
-                        },
-                        MenuOption("Import Workout") {
-                            Toast.makeText(context, "Import Workout clicked", Toast.LENGTH_SHORT).show()
-                        }
-                    ),
-                    onPlaylistAdded = {
 
-                    }
-                )
-            }
-        }
-
-        // For list of workouts:
-
-        // Display the WorkoutSelectionDialog if the state is true.
-        if (showWorkoutSelectionDialog) {
-            WorkoutSelectionDialog(
-                playlist = playlist.value!!,
-                initialWorkout = workoutToEdit, // Pass the data if present—dialog will be in edit mode.
-                onDismiss = {
-                    showWorkoutSelectionDialog = false
-                    workoutToEdit = null
-                },
-                onConfirm = { workoutEntry ->
-                    // Here you update your UI, and later add Firebase logic.
-                    Toast.makeText(
-                        context,
-                        "Workout updated: ${workoutEntry.name} with ${workoutEntry.reps} reps and ${workoutEntry.sets} sets",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                    showWorkoutSelectionDialog = false
-                    workoutToEdit = null
+                Button(
+                    onClick = {
+                        if (isTimerRunning) timerViewModel.pauseTimer()
+                        else timerViewModel.startTimer()
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF212121)),
+                    shape = RoundedCornerShape(12.dp),
+                    contentPadding = PaddingValues(0.dp),
+                    modifier = Modifier
+                        .width(66.dp)
+                        .height(56.dp)
+                        .padding(start = 12.dp)
+                ) {
+                    Text(
+                        text = if (isTimerRunning) "■" else "▶",
+                        fontSize = 36.sp,
+                        color = Color.White
+                    )
                 }
-            )
-            localFetchPlaylist()
-        }
 
-        LazyColumn(
-            modifier = Modifier
-                .weight(1f) // Takes up available vertical space to allow scrolling
-                .fillMaxWidth()
-        ) {
-            // Example list of workouts with #Reps and #Sets
-            items(playlist.value!!.workouts) { workout ->
-                val context = LocalContext.current
+                // Display the timer value:
+                Text(
+                    text = "Time: ${timerSeconds / 60}:${
+                        (timerSeconds % 60).toString().padStart(2, '0')
+                    }",
+                    color = Color.White,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Medium,
+                    modifier = Modifier.padding(start = 12.dp)
 
-                Row(
+                )
+
+                //button for adding workouts
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 8.dp)
-                        .background(Color(0xFF212121), RoundedCornerShape(8.dp))
-                        .padding(16.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                        .padding(end = 12.dp),
+                    contentAlignment = Alignment.TopEnd
                 ) {
-                    // Left placeholder icon/box
-                    //CHECKBOX TO MARK WORKOUTS DONE
-                    Box(
-                        modifier = Modifier.scale(1.5f) // Scale up the checkbox
-                    ) {
-                        Checkbox(
-                            checked = checkedWorkouts[workout.id] == true,
-                            onCheckedChange = { isChecked ->
-                                checkedWorkouts[workout.id] = isChecked
-                            },
-                            colors = CheckboxDefaults.colors(
-                                checkedColor = Color(0xFF4CAF50), // Green fill when checked
-                                uncheckedColor = Color.White,     // White border when unchecked
-                                checkmarkColor = Color.Black      // Color of the checkmark itself
-                            )
+                    PlusButtonWithMenu(
+                        menuOptions = listOf(
+                            MenuOption("Add Workout") {
+                                showWorkoutSelectionDialog = true
+                            }
+
                         )
-                    }
 
-                    // Workout details
-                    Column(
-                        modifier = Modifier
-                            .weight(1f, fill = false)
-                            .padding(start = 16.dp)
-                    ) {
-                        Text(text = workout.title, fontSize = 16.sp, color = Color.White)
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Row {
-                            Text(
-                                text = "# Reps: ${workout.reps ?: "-"}",
-                                fontSize = 14.sp,
-                                color = Color.White
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = "# Sets: ${workout.sets ?: "-"}",
-                                fontSize = 14.sp,
-                                color = Color.White
-                            )
-                        }
-                    }
-
-                    MoreOptionsMenu(
-                        onShare = null,
-                        onRemove = {
-                            firestoreRepository.removeWorkout(
-                                playlistId = playlistId,
-                                workoutId = workout.id,
-                                onSuccess = {
-                                    localFetchPlaylist()
-                                    Toast.makeText(
-                                        context,
-                                        "Removed: ${workout.title}",
-                                        Toast.LENGTH_SHORT
-                                    ).show()
-                                }
-                            )
-                        },
-                        onEdit = {
-                            workoutToEdit = WorkoutEntry(
-                                name = workout.title,
-                                reps = workout.reps ?: 0,
-                                sets = workout.sets ?: 0
-                            )
-                            showWorkoutSelectionDialog = true
-                        },
-                        onTutorial = {
-                            navController.navigate("tutorial/${workout.id}")
-                        }
                     )
                 }
             }
-        }
+            // For list of workouts:
 
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Example bottom navigation row
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(Color(0xFF4CAF50))
-                .padding(8.dp),
-            horizontalArrangement = Arrangement.SpaceAround
-        ) {
-            Button(
-                onClick = { navController.navigate("library") },
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF212121))
-            ) {
-                Text("Home", color = Color.White)
+            // Display the WorkoutSelectionDialog if the state is true.
+            if (showWorkoutSelectionDialog) {
+                WorkoutSelectionDialog(
+                    playlist = playlist.value!!,
+                    initialWorkout = workoutToEdit, // Pass the data if present—dialog will be in edit mode.
+                    onDismiss = {
+                        showWorkoutSelectionDialog = false
+                        workoutToEdit = null
+                    },
+                    onConfirm = { workoutEntry ->
+                        // Here you update your UI, and later add Firebase logic.
+                        Toast.makeText(
+                            context,
+                            "Workout updated: ${workoutEntry.name} with ${workoutEntry.reps} reps and ${workoutEntry.sets} sets",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        showWorkoutSelectionDialog = false
+                        workoutToEdit = null
+                    }
+                )
+                localFetchPlaylist()
             }
+
+            LazyColumn(
+                modifier = Modifier
+                    .weight(1f) // Takes up available vertical space to allow scrolling
+                    .fillMaxWidth()
+            ) {
+                // Example list of workouts with #Reps and #Sets
+                items(playlist.value!!.workouts) { workout ->
+                    val context = LocalContext.current
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 8.dp)
+                            .height(96.dp)
+                            .background(Color(0xFF212121), RoundedCornerShape(12.dp))
+                            .padding(horizontal = 12.dp, vertical = 8.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // Left placeholder icon/box
+                        //CHECKBOX TO MARK WORKOUTS DONE
+                        Box(
+                            modifier = Modifier.scale(1.5f) // Scale up the checkbox
+                        ) {
+                            Checkbox(
+                                checked = checkedWorkouts[workout.id] == true,
+                                onCheckedChange = { isChecked ->
+                                    checkedWorkouts[workout.id] = isChecked
+                                },
+                                colors = CheckboxDefaults.colors(
+                                    checkedColor = Color(0xFF4CAF50), // Green fill when checked
+                                    uncheckedColor = Color.White,     // White border when unchecked
+                                    checkmarkColor = Color.Black      // Color of the checkmark itself
+                                )
+                            )
+                        }
+
+                        // Workout details
+                        Column(
+                            modifier = Modifier
+                                .weight(1f, fill = false)
+                                .padding(start = 16.dp)
+                        ) {
+                            Text(text = workout.title, fontSize = 16.sp, color = Color.White)
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Row {
+                                Text(
+                                    text = "# Reps: ${workout.reps ?: "-"}",
+                                    fontSize = 14.sp,
+                                    color = Color.White
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = "# Sets: ${workout.sets ?: "-"}",
+                                    fontSize = 14.sp,
+                                    color = Color.White
+                                )
+                            }
+                        }
+
+                        MoreOptionsMenu(
+                            onShare = null,
+                            onRemove = {
+                                firestoreRepository.removeWorkout(
+                                    playlistId = playlistId,
+                                    workoutId = workout.id,
+                                    onSuccess = {
+                                        localFetchPlaylist()
+                                        Toast.makeText(
+                                            context,
+                                            "Removed: ${workout.title}",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                    }
+                                )
+                            },
+                            onEdit = {
+                                workoutToEdit = WorkoutEntry(
+                                    name = workout.title,
+                                    reps = workout.reps ?: 0,
+                                    sets = workout.sets ?: 0
+                                )
+                                showWorkoutSelectionDialog = true
+                            },
+                            onTutorial = {
+                                navController.navigate("tutorial/${workout.id}")
+                            }
+                        )
+                    }
+                }
+            }
+            /* Home Button:
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Example bottom navigation row
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Color(0xFF4CAF50))
+                    .padding(8.dp),
+                horizontalArrangement = Arrangement.SpaceAround
+            ) {
+                Button(
+                    onClick = { navController.navigate("library") },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF212121))
+                ) {
+                    Text("Home", color = Color.White)
+                }
+            }*/
         }
     }
 }

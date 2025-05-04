@@ -17,11 +17,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import android.widget.Toast // "Toast" is an Android API used to display the short confirmation messages after clicking the buttons
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.ui.platform.LocalContext
 import com.example.sprint0nj.data.FirestoreRepository
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import com.example.sprint0nj.MoreOptionsMenu
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
@@ -44,8 +47,10 @@ fun LibraryScreen(navController: NavHostController) {
     val playlists = remember { mutableStateOf<List<Pair<String, String>>>(emptyList()) }
     var selectedUserId = FirebaseAuth.getInstance().currentUser?.uid
     var sharePlaylistID = ""
-
-
+    val currentUser = FirebaseAuth.getInstance().currentUser
+    val displayName = currentUser?.displayName ?: currentUser?.email ?: "Unknown User"
+    var showPlaylistDialog by remember { mutableStateOf(false) }
+    var showAddDialog by remember { mutableStateOf(false) }
 
 
     val localRefreshPlaylists = {
@@ -53,7 +58,7 @@ fun LibraryScreen(navController: NavHostController) {
             scope.launch {
                 val updated = firestoreRepository.fetchPlaylistSummaries(
                     selectedUserId,
-                    onResult = {updated->
+                    onResult = { updated ->
                         playlists.value = updated
                     }
                 )
@@ -81,198 +86,259 @@ fun LibraryScreen(navController: NavHostController) {
 //    }
 
     LaunchedEffect(Unit) {
-        firestoreRepository.fetchPlaylistSummaries(userId = selectedUserId!!){ summaries ->
+        firestoreRepository.fetchPlaylistSummaries(userId = selectedUserId!!) { summaries ->
             playlists.value = summaries
         }
 
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFF4CAF50)) // Green background
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+    Box(
+        modifier = Modifier.fillMaxSize()
     ) {
-        Spacer(modifier = Modifier.height(80.dp))
-
-        Text(
-            text = "My Playlists",
-            fontSize = 28.sp,
-            color = Color.White,
-            modifier = Modifier.padding(bottom = 16.dp)
+        Image(
+            painter = painterResource(id = R.drawable.squatmainbg),
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.fillMaxSize()
         )
-        //TAKES YOU TO HOME SCREEN
-        /*
-        Button(onClick = { navController.navigate("home") }) {
-            Text("Go to Home")
-        }
-        */
 
-        // A Box is used as a container that fills the available width
-        // The contentAlignment parameter ensures that the children (the plus button) is positioned at the top-right of the Box
-        // "Toast" is an Android API used to display the short confirmation messages after clicking the buttons
-        Box(
-            modifier = Modifier.fillMaxWidth(),
-            contentAlignment = Alignment.TopEnd
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            // Call the reusable PlusButtonWithMenu composable
-            // List of MenuOption objects is passed to define the menu items
-            PlusButtonWithMenu(
-                menuOptions = listOf(
-                    // First menu option with the title "Add Playlist"
-                    // When clicked, a Toast message is displayed
-                    MenuOption("Add Playlist") {
-
-                        //Toast.makeText(context, "Add Playlist clicked", Toast.LENGTH_SHORT).show()
-                    },
-                    // Second menu option with the title "Import Playlist"
-                    // When clicked, a Toast message is displayed
-                    MenuOption("Import Playlist") {
-                        Toast.makeText(context, "Import Playlist clicked", Toast.LENGTH_SHORT).show()
+            Image(
+                painter = painterResource(id = R.drawable.user_icon),
+                contentDescription = "User Icon",
+                modifier = Modifier
+                    .size(64.dp)
+                    .padding(end = 12.dp)
+                    .clickable {
+                        navController.navigate("friends")
                     }
-                ),
-                onPlaylistAdded = {
-                    localRefreshPlaylists()
-                }
+            )
+            Text(
+                text = displayName,
+                color = Color.White,
+                fontSize = 20.sp, // increased from 16.sp to 20.sp
+                style = MaterialTheme.typography.bodyLarge
             )
         }
 
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
 
-        Spacer(modifier = Modifier.height(16.dp))
-        // LAZY COLUMN is our whole scrolling feature, this allows us to scroll when the list gets too big for the screen
-        LazyColumn {
-            items(playlists.value) { (id, name) ->
-                // We replaced the single Button with a Row that includes clickable text and a "..." dropdown
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 4.dp)
-                        .background(Color(0xFF212121), RoundedCornerShape(8.dp))
-                        .padding(horizontal = 8.dp, vertical = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    // Clicking the text navigates to the WorkoutScreen
-                    Text(
-                        text = name,
-                        fontSize = 16.sp,
-                        color = Color.White,
+           /* Original Spacing for playlists and plus button
+            Spacer(modifier = Modifier.height(80.dp))
+
+
+            Text(
+                text = "My Playlists",
+                fontSize = 28.sp,
+                color = Color.White,
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
+
+            Box(
+                Modifier.fillMaxWidth(),
+                contentAlignment = Alignment.TopEnd
+            ) {
+                PlusButtonWithMenu(
+                    menuOptions = listOf(
+                        MenuOption("Add Playlist") {
+                            // directly pop up the dialog
+                            showAddDialog = true
+                        }
+                    ),
+                    onPlaylistAdded = { localRefreshPlaylists() }
+                )
+            }
+
+
+            Spacer(modifier = Modifier.height(16.dp))*/
+
+            // New spacing so "My Playlists" is left aligned
+            Spacer(modifier = Modifier.height(80.dp))
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = "My Playlists",
+                    fontSize = 28.sp,
+                    color = Color.White
+                )
+                PlusButtonWithMenu(
+                    menuOptions = listOf(
+                        MenuOption("Add Playlist") { showAddDialog = true }
+                    ),
+                    onPlaylistAdded = { localRefreshPlaylists() }
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // LAZY COLUMN is our whole scrolling feature, this allows us to scroll when the list gets too big for the screen
+            LazyColumn {
+                items(playlists.value) { (id, name) ->
+                    // We replaced the single Button with a Row that includes clickable text and a "..." dropdown
+                    Row(
                         modifier = Modifier
-                            .weight(1f)
-                            .clickable {
-                                // Navigate to the WorkoutScreen route
-                                navController.navigate("workout/$id")
-                            }
-                    )
-                    // "..." button with dropdown menu containing Share and Remove (placeholder)
-                    MoreOptionsMenu(
-                        onShare = {
-                            // When share is clicked, save the playlist info and show the ShareDialog.
-                            // "id to name" is shorthand for Pair(id, name)
-                            sharePlaylistID = id
-                            selectedPlaylistForShare = id to name
-                            sharePlaylistID = id
-                            showShareDialog = true
-                        },
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp)
+                            .height(96.dp)
+                            .background(Color(0xFF212121), RoundedCornerShape(12.dp))
+                            .padding(horizontal = 12.dp, vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        // Clicking the text navigates to the WorkoutScreen
+                        Text(
+                            text = name,
+                            fontSize = 16.sp,
+                            color = Color.White,
+                            modifier = Modifier
+                                .weight(1f)
+                                .clickable {
+                                    // Navigate to the WorkoutScreen route
+                                    navController.navigate("workout/$id")
+                                }
+                        )
+                        // "..." button with dropdown menu containing Share and Remove (placeholder)
+                        MoreOptionsMenu(
+                            onShare = {
+                                // When share is clicked, save the playlist info and show the ShareDialog.
+                                // "id to name" is shorthand for Pair(id, name)
+                                sharePlaylistID = id
+                                selectedPlaylistForShare = id to name
+                                sharePlaylistID = id
+                                showShareDialog = true
+                            },
 
-                        // Previous code:
-                       /* onShare = { // destUsername will be replaced with user input once we have pop up
-                            firestoreRepository.sharePlaylist(destUsername = "Thats Gonna Leave A Marc",
+                            // Previous code:
+                            /* onShare = { // destUsername will be replaced with user input once we have pop up
+                            firestoreRepository.sharePlaylist(destUsername = "That's Gonna Leave A Marc",
                                 playlistId = id,
                                 onSuccess = {
                                     Toast.makeText(context, "Shared playlist: $name", Toast.LENGTH_SHORT).show()
                                 }
                                 )
                         },*/
-                        onRemove = {
-                            firestoreRepository.removePlaylist(
-                                userId = selectedUserId!!,
-                                playlistId = id,
-                                onSuccess = {
-                                    localRefreshPlaylists()
-                                    Toast.makeText(context, "Remove clicked for playlist: $name", Toast.LENGTH_SHORT).show()
-                                }
-                            )
-                        },
-                        onEdit = {
-                            // When "Edit" is clicked, store this playlist's data
-                            // "id to name" is shorthand for Pair(id, name)
-                            playlistToRename = id to name
-                            showRenameDialog = true
-                        }
-                    )
+                            onRemove = {
+                                firestoreRepository.removePlaylist(
+                                    userId = selectedUserId!!,
+                                    playlistId = id,
+                                    onSuccess = {
+                                        localRefreshPlaylists()
+                                        Toast.makeText(
+                                            context,
+                                            "Remove clicked for playlist: $name",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                    }
+                                )
+                            },
+                            onEdit = {
+                                // When "Edit" is clicked, store this playlist's data
+                                // "id to name" is shorthand for Pair(id, name)
+                                playlistToRename = id to name
+                                showRenameDialog = true
+                            }
+                        )
+                    }
                 }
             }
         }
-    }
 
-    // This is for "Share"
+        if (showAddDialog) {
+            PlaylistNameDialog(
+                onDismiss = { showAddDialog = false },
+                onConfirm = { newName ->
+                    // [Firebase placeholder] firestoreRepository.postPlaylist(...)
+                    Toast.makeText(context, "Playlist added: $newName", Toast.LENGTH_SHORT).show()
+                    localRefreshPlaylists()
+                    showAddDialog = false
+                },
+                onPlaylistAdded = { /*not used here*/ }
+            )
+        }
 
-    if (showShareDialog && selectedPlaylistForShare != null) {
-    ShareDialog(
-        onDismiss = {
-            // When the dialog is dismissed, reset the share-related state
-            showShareDialog = false
-            selectedPlaylistForShare = null
-        },
-        onConfirm = { friendUsername ->
-            // [Firebase Placeholder]
+        // This is for "Share"
 
-
-            val playlistID = selectedPlaylistForShare?.first ?: "Not Working"
-            val playlistName = selectedPlaylistForShare?.second ?: "Unknown Playlist"
-            firestoreRepository.sharePlaylist(
-                destUsername = friendUsername,
-                playlistId = playlistID,
-                onSuccess = {
-                    Toast.makeText(
-                        context,
-                        "Shared $playlistName with $friendUsername",
-                        Toast.LENGTH_SHORT
-                    ).show()
+        if (showShareDialog && selectedPlaylistForShare != null) {
+            ShareDialog(
+                onDismiss = {
+                    // When the dialog is dismissed, reset the share-related state
                     showShareDialog = false
                     selectedPlaylistForShare = null
                 },
-                onFailure = {
-                    Toast.makeText(
-                        context,
-                        "User not found.",
-                        Toast.LENGTH_SHORT
-                    ).show()
+                onConfirm = { friendUsername ->
+                    // [Firebase Placeholder]
+
+
+                    val playlistID = selectedPlaylistForShare?.first ?: "Not Working"
+                    val playlistName = selectedPlaylistForShare?.second ?: "Unknown Playlist"
+                    firestoreRepository.sharePlaylist(
+                        destUsername = friendUsername,
+                        playlistId = playlistID,
+                        onSuccess = {
+                            Toast.makeText(
+                                context,
+                                "Shared $playlistName with $friendUsername",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                            showShareDialog = false
+                            selectedPlaylistForShare = null
+                        },
+                        onFailure = {
+                            Toast.makeText(
+                                context,
+                                "User not found.",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    )
+                    // For now, just showing Toast message (can delete or keep)
+
+                    // Reset state after confirming
+
                 }
             )
-            // For now, just showing Toast message (can delete or keep)
-
-            // Reset state after confirming
-
         }
-    )
-}
 
-    // This dialog is shown when "Edit" is selected on a playlist
+        // This dialog is shown when "Edit" is selected on a playlist
 
-    if (showRenameDialog && playlistToRename != null) {
-        RenamePlaylistDialog(
-            currentName = playlistToRename!!.second, // Pre-populates with the existing playlist name
-            onDismiss = {
-                // Reset rename state when dismissed
-                showRenameDialog = false
-                playlistToRename = null
-            },
-            onConfirm = { newName ->
-                // [Firebase Placeholder]
-                // For now, just showing Toast message (can delete or keep)
-                Toast.makeText(
-                    context,
-                    "Playlist renamed to: $newName",
-                    Toast.LENGTH_SHORT
-                ).show()
-                // Reset state and refresh playlists
-                showRenameDialog = false
-                playlistToRename = null
-                localRefreshPlaylists()
-            }
-        )
+        if (showRenameDialog && playlistToRename != null) {
+            RenamePlaylistDialog(
+                currentName = playlistToRename!!.second, // Pre-populates with the existing playlist name
+                onDismiss = {
+                    // Reset rename state when dismissed
+                    showRenameDialog = false
+                    playlistToRename = null
+                },
+                onConfirm = { newName ->
+                    // [Firebase Placeholder]
+                    // For now, just showing Toast message (can delete or keep)
+                    Toast.makeText(
+                        context,
+                        "Playlist renamed to: $newName",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    // Reset state and refresh playlists
+                    showRenameDialog = false
+                    playlistToRename = null
+                    localRefreshPlaylists()
+                }
+            )
+        }
     }
 }

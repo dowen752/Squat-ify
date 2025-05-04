@@ -141,17 +141,6 @@ fun LoginScreen(navController: NavHostController) {
 
         }
 
-        Box(
-            modifier = Modifier
-                .size(40.dp)
-                .background(Color(0xFF388E3C))
-                .align(Alignment.BottomStart)
-                .padding(16.dp)
-                .clickable {
-
-                    navController.navigate("library")
-                }
-        )
     }
     if (showRegisterDialog) {
         RegisterDialog1(
