@@ -144,7 +144,7 @@ fun FriendsScreen(navController: NavController) {
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF212121))
 
             ) {
-                Text("Logout", color = Color.White)
+                Text("Log out", color = Color.White)
             }
         }
     }
