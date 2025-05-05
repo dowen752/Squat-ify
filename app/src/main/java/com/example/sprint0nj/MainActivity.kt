@@ -28,6 +28,7 @@ import androidx.compose.ui.res.painterResource
 import com.example.sprint0nj.MoreOptionsMenu
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
+import com.example.sprint0nj.SearchPlaylistsButton
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -51,6 +52,7 @@ fun LibraryScreen(navController: NavHostController) {
     val displayName = currentUser?.displayName ?: currentUser?.email ?: "Unknown User"
     var showPlaylistDialog by remember { mutableStateOf(false) }
     var showAddDialog by remember { mutableStateOf(false) }
+    var showSearchDialog by remember { mutableStateOf(false) }
 
 
     val localRefreshPlaylists = {
@@ -105,7 +107,8 @@ fun LibraryScreen(navController: NavHostController) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                // changes user icon and username position
+                .padding(start = 4.dp, end = 16.dp, top = 48.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Image(
@@ -133,37 +136,7 @@ fun LibraryScreen(navController: NavHostController) {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
-           /* Original Spacing for playlists and plus button
-            Spacer(modifier = Modifier.height(80.dp))
-
-
-            Text(
-                text = "My Playlists",
-                fontSize = 28.sp,
-                color = Color.White,
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
-
-            Box(
-                Modifier.fillMaxWidth(),
-                contentAlignment = Alignment.TopEnd
-            ) {
-                PlusButtonWithMenu(
-                    menuOptions = listOf(
-                        MenuOption("Add Playlist") {
-                            // directly pop up the dialog
-                            showAddDialog = true
-                        }
-                    ),
-                    onPlaylistAdded = { localRefreshPlaylists() }
-                )
-            }
-
-
-            Spacer(modifier = Modifier.height(16.dp))*/
-
-            // New spacing so "My Playlists" is left aligned
-            Spacer(modifier = Modifier.height(80.dp))
+            Spacer(modifier = Modifier.height(100.dp))
 
             Row(
                 modifier = Modifier
@@ -177,15 +150,24 @@ fun LibraryScreen(navController: NavHostController) {
                     fontSize = 28.sp,
                     color = Color.White
                 )
-                PlusButtonWithMenu(
-                    menuOptions = listOf(
-                        MenuOption("Add Playlist") { showAddDialog = true }
-                    ),
-                    onPlaylistAdded = { localRefreshPlaylists() }
-                )
+                // for grouping the two icons together
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    SearchPlaylistsButton(onSearch = { showSearchDialog = true })
+                    PlusButtonWithMenu(
+                        menuOptions = listOf(
+                            MenuOption("Add Playlist") { showAddDialog = true }
+                        ),
+                        onPlaylistAdded = { localRefreshPlaylists() }
+                    )
+                }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            // Space between "My Playlists" and list of actual playlists
+
+            //Spacer(modifier = Modifier.height(2.dp))
 
             // LAZY COLUMN is our whole scrolling feature, this allows us to scroll when the list gets too big for the screen
             LazyColumn {
@@ -337,6 +319,16 @@ fun LibraryScreen(navController: NavHostController) {
                     showRenameDialog = false
                     playlistToRename = null
                     localRefreshPlaylists()
+                }
+            )
+        }
+
+        if (showSearchDialog) {
+            SearchPlaylistsDialog(
+                onDismiss = { showSearchDialog = false },
+                onConfirm = { query ->
+                    // TODO: send `query` into your search/filter logic
+                    showSearchDialog = false
                 }
             )
         }
