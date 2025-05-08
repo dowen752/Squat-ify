@@ -62,10 +62,11 @@ fun LibraryScreen(navController: NavHostController) {
     val localRefreshPlaylists = {
         if (selectedUserId != null) {
             scope.launch {
-                val updated = firestoreRepository.fetchPlaylistSummaries(
-                    selectedUserId,
+                firestoreRepository.fetchPlaylistSummaries(
+                    userId = selectedUserId,
                     onResult = { updated ->
                         playlists.value = updated
+                        displayedPlaylists = updated
                     }
                 )
             }
@@ -213,15 +214,6 @@ fun LibraryScreen(navController: NavHostController) {
                                 showShareDialog = true
                             },
 
-                            // Previous code:
-                            /* onShare = { // destUsername will be replaced with user input once we have pop up
-                            firestoreRepository.sharePlaylist(destUsername = "That's Gonna Leave A Marc",
-                                playlistId = id,
-                                onSuccess = {
-                                    Toast.makeText(context, "Shared playlist: $name", Toast.LENGTH_SHORT).show()
-                                }
-                                )
-                        },*/
                             onRemove = {
                                 firestoreRepository.removePlaylist(
                                     userId = selectedUserId!!,
@@ -328,10 +320,9 @@ fun LibraryScreen(navController: NavHostController) {
                         "Playlist renamed to: $newName",
                         Toast.LENGTH_SHORT
                     ).show()
-                    // Reset state and refresh playlists
+                    // Reset state
                     showRenameDialog = false
                     playlistToRename = null
-                    localRefreshPlaylists()
                 }
             )
         }
