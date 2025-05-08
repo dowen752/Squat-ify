@@ -113,13 +113,13 @@ fun FriendsScreen(navController: NavController) {
                             onClick = {
                                 Toast.makeText(
                                     context,
-                                    "Viewing ${friend}'s workouts",
+                                    "Removed ${friend}",
                                     Toast.LENGTH_SHORT
                                 ).show()
                             },
                             colors = ButtonDefaults.buttonColors(containerColor = Color.DarkGray)
                         ) {
-                            Text("View", color = Color.White)
+                            Text("Remove", color = Color.White)
                         }
                     }
                 }
