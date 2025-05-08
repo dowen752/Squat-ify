@@ -23,6 +23,7 @@ import com.google.firebase.auth.FirebaseAuth
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
+import androidx.compose.ui.text.font.FontWeight
 
 // PlusButtonWithMenu and MenuOption
 import com.example.sprint0nj.PlusButtonWithMenu
@@ -38,7 +39,7 @@ fun FriendsScreen(navController: NavController) {
     val friends = remember {
         mutableStateOf(
             listOf(
-                "Marc Martinez", "Emily K.", "testUser2", "StrongSteve", "LegDayLori"
+                "testFriend"
             )
         )
     }
@@ -73,6 +74,7 @@ fun FriendsScreen(navController: NavController) {
                 Text(
                     text = "My Friends",
                     fontSize = 28.sp,
+                    fontWeight = FontWeight.Bold,
                     color = Color.White,
                     modifier = Modifier.padding(bottom = 16.dp)
                 )
@@ -107,6 +109,7 @@ fun FriendsScreen(navController: NavController) {
                             text = friend,
                             fontSize = 20.sp,
                             color = Color.White,
+                            fontWeight = FontWeight.Bold,
                             modifier = Modifier.weight(1f)
                         )
                         Button(
@@ -144,7 +147,8 @@ fun FriendsScreen(navController: NavController) {
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF212121))
 
             ) {
-                Text("Log out", color = Color.White)
+                Text("Log out", color = Color.White, fontWeight = FontWeight.Bold)
+
             }
         }
     }

@@ -20,6 +20,8 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import coil.compose.rememberImagePainter
 import androidx.compose.foundation.Image
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import com.example.sprint0nj.data.FirestoreRepository
 import com.google.firebase.auth.FirebaseAuth
 import com.example.sprint0nj.RegisterDialog as RegisterDialog1 // android studio did this because it wasn't importing initially
@@ -32,34 +34,29 @@ fun LoginScreen(navController: NavHostController) {
     val firestoreRepository = remember { FirestoreRepository()}
     val auth = FirebaseAuth.getInstance()
     val context = LocalContext.current
-    val imageUrl = "https://i.imgur.com/XEIK40Z.png"
+    val backgroundPainter = painterResource(id = R.drawable.squat_loginscreen)
 
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFF4CAF50))
+        modifier = Modifier.fillMaxSize()
     ) {
+        Image(
+            painter = painterResource(id = R.drawable.squat_loginscreen),
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier
+                .fillMaxHeight()
+                .fillMaxWidth()
+                .align(Alignment.TopCenter)
+
+        )
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .align(Alignment.Center),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(
-                text = "Squat-ify",
-                fontSize = 45.sp,
-                color = Color.Black
-            )
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Image(
-                painter = rememberImagePainter(imageUrl),
-                contentDescription = "Login Screen Image",
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(300.dp)
-            )
+            Spacer(modifier = Modifier.height(500.dp))
 
             Spacer(modifier = Modifier.height(16.dp))
 
