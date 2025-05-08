@@ -25,6 +25,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import com.example.sprint0nj.MoreOptionsMenu
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
@@ -115,7 +116,7 @@ fun LibraryScreen(navController: NavHostController) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Image(
-                painter = painterResource(id = R.drawable.user_icon),
+                painter = painterResource(id = R.drawable.user2),
                 contentDescription = "User Icon",
                 modifier = Modifier
                     .size(64.dp)
@@ -127,8 +128,9 @@ fun LibraryScreen(navController: NavHostController) {
             Text(
                 text = displayName,
                 color = Color.White,
-                fontSize = 20.sp, // increased from 16.sp to 20.sp
-                style = MaterialTheme.typography.bodyLarge
+                fontSize = 20.sp,
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Bold
             )
         }
 
@@ -151,6 +153,7 @@ fun LibraryScreen(navController: NavHostController) {
                 Text(
                     text = "My Playlists",
                     fontSize = 28.sp,
+                    fontWeight = FontWeight.Bold,
                     color = Color.White
                 )
                 // for grouping the two icons together
@@ -171,6 +174,7 @@ fun LibraryScreen(navController: NavHostController) {
             // Space between "My Playlists" and list of actual playlists
 
             //Spacer(modifier = Modifier.height(2.dp))
+            Spacer(modifier = Modifier.height(50.dp))
 
             // LAZY COLUMN is our whole scrolling feature, this allows us to scroll when the list gets too big for the screen
             LazyColumn {
@@ -189,12 +193,12 @@ fun LibraryScreen(navController: NavHostController) {
                         // Clicking the text navigates to the WorkoutScreen
                         Text(
                             text = name,
-                            fontSize = 16.sp,
+                            fontSize = 20.sp, // increased from 16.sp
+                            fontWeight = FontWeight.Bold, // makes text bold
                             color = Color.White,
                             modifier = Modifier
                                 .weight(1f)
                                 .clickable {
-                                    // Navigate to the WorkoutScreen route
                                     navController.navigate("workout/$id")
                                 }
                         )
