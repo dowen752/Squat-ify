@@ -224,11 +224,6 @@ fun LibraryScreen(navController: NavHostController) {
                                     playlistId = id,
                                     onSuccess = {
                                         localRefreshPlaylists()
-                                        Toast.makeText(
-                                            context,
-                                            "Remove clicked for playlist: $name",
-                                            Toast.LENGTH_SHORT
-                                        ).show()
                                     }
                                 )
                             },

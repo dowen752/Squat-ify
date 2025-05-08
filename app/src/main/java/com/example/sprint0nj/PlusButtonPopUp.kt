@@ -88,7 +88,6 @@ fun PlaylistNameDialog(
                         userId = selectedUserId!!,
                         onSuccess = {
                             val name = playlist.name
-                            Toast.makeText(context, "Added playlist: $name", Toast.LENGTH_SHORT).show()
                             onPlaylistAdded()
                         }
                     )
@@ -110,7 +109,7 @@ fun PlaylistNameDialog(
                 onClick = onDismiss,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color.Transparent,
-                    contentColor   = MaterialTheme.colorScheme.onSurfaceVariant
+                    contentColor   = MaterialTheme.colorScheme.primary
                 )
             ) {
                 Text("Cancel")

@@ -209,12 +209,6 @@ fun WorkoutScreen(navController: NavController, playlistId: String) {
                         workoutToEdit = null
                     },
                     onConfirm = { workoutEntry ->
-                        // Here you update your UI, and later add Firebase logic.
-                        Toast.makeText(
-                            context,
-                            "Workout updated: ${workoutEntry.name} with ${workoutEntry.reps} reps and ${workoutEntry.sets} sets",
-                            Toast.LENGTH_SHORT
-                        ).show()
                         showWorkoutSelectionDialog = false
                         workoutToEdit = null
                     }
@@ -290,11 +284,6 @@ fun WorkoutScreen(navController: NavController, playlistId: String) {
                                     workoutId = workout.id,
                                     onSuccess = {
                                         localFetchPlaylist()
-                                        Toast.makeText(
-                                            context,
-                                            "Removed: ${workout.title}",
-                                            Toast.LENGTH_SHORT
-                                        ).show()
                                     }
                                 )
                             },
