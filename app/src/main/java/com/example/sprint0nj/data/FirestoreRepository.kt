@@ -302,4 +302,36 @@ class FirestoreRepository {
                 onComplete() // Still call it to avoid UI hanging
             }
     }
+
+    // Update the name of a playlist, ensuring the user owns it
+    fun renamePlaylist(
+        userId: String,
+        playlistId: String,
+        newName: String,
+        onSuccess: () -> Unit,
+        onFailure: () -> Unit
+    ) {
+        val userRef = db.collection("users").document(userId)
+
+        // Check if the user actually owns this playlist
+        userRef.get().addOnSuccessListener { userDoc ->
+            if (userDoc.exists()) {
+                val playlistIds = userDoc.get("playlistIds") as? List<String> ?: emptyList()
+                if (playlistIds.contains(playlistId)) {
+                    // Update the playlist name
+                    playlistsCollection.document(playlistId).update("name", newName)
+                        .addOnSuccessListener {
+                            onSuccess()
+                        }
+                        .addOnFailureListener { e ->
+                            Log.e("Firestore", "Failed to rename playlist: ${e.message}")
+                            onFailure()
+                        }
+                } else {
+                    Log.e("Firestore", "User does not own this playlist")
+                    onFailure()
+                }
+            }
+        }
+    }
 }

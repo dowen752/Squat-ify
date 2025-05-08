@@ -310,8 +310,19 @@ fun LibraryScreen(navController: NavHostController) {
                     playlistToRename = null
                 },
                 onConfirm = { newName ->
-                    // [Firebase Placeholder]
-                    // For now, just showing Toast message (can delete or keep)
+                    val playlistId = playlistToRename!!.first
+                    firestoreRepository.renamePlaylist(
+                        selectedUserId!!,
+                        playlistId,
+                        newName,
+                        onSuccess = {
+                            Toast.makeText(context, "Playlist renamed to: $newName", Toast.LENGTH_SHORT).show()
+                            localRefreshPlaylists()
+                        },
+                        onFailure = {
+                            Toast.makeText(context, "Failed to rename playlist.", Toast.LENGTH_SHORT).show()
+                        }
+                    )
                     Toast.makeText(
                         context,
                         "Playlist renamed to: $newName",
