@@ -292,4 +292,14 @@ class FirestoreRepository {
 
         }
     }
+
+    fun removeFriend(userId: String, friendUsername: String, onComplete: () -> Unit) {
+        val userRef = FirebaseFirestore.getInstance().collection("users").document(userId)
+        userRef.update("userFriends", FieldValue.arrayRemove(friendUsername))
+            .addOnSuccessListener { onComplete() }
+            .addOnFailureListener { e ->
+                Log.e("Firestore", "Failed to remove friend: ${e.message}")
+                onComplete() // Still call it to avoid UI hanging
+            }
+    }
 }
