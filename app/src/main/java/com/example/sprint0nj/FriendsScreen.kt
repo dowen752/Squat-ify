@@ -124,7 +124,6 @@ fun FriendsScreen(navController: NavController) {
                                     firestoreRepository.removeFriend(currentUserId, friend) {
                                         firestoreRepository.fetchFriendsList(currentUserId) { updatedList ->
                                             friends.value = updatedList
-                                            Toast.makeText(context, "Removed $friend", Toast.LENGTH_SHORT).show()
                                         }
                                     }
                                 }

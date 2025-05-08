@@ -239,8 +239,6 @@ fun LibraryScreen(navController: NavHostController) {
             PlaylistNameDialog(
                 onDismiss = { showAddDialog = false },
                 onConfirm = { newName ->
-                    // [Firebase placeholder] firestoreRepository.postPlaylist(...)
-                    Toast.makeText(context, "Playlist added: $newName", Toast.LENGTH_SHORT).show()
                     localRefreshPlaylists()
                     showAddDialog = false
                 },
@@ -308,18 +306,12 @@ fun LibraryScreen(navController: NavHostController) {
                         playlistId,
                         newName,
                         onSuccess = {
-                            Toast.makeText(context, "Playlist renamed to: $newName", Toast.LENGTH_SHORT).show()
                             localRefreshPlaylists()
                         },
                         onFailure = {
                             Toast.makeText(context, "Failed to rename playlist.", Toast.LENGTH_SHORT).show()
                         }
                     )
-                    Toast.makeText(
-                        context,
-                        "Playlist renamed to: $newName",
-                        Toast.LENGTH_SHORT
-                    ).show()
                     // Reset state
                     showRenameDialog = false
                     playlistToRename = null
