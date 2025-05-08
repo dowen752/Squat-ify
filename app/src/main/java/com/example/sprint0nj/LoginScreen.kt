@@ -34,13 +34,13 @@ fun LoginScreen(navController: NavHostController) {
     val firestoreRepository = remember { FirestoreRepository()}
     val auth = FirebaseAuth.getInstance()
     val context = LocalContext.current
-    val backgroundPainter = painterResource(id = R.drawable.squat_loginscreen)
+    val backgroundPainter = painterResource(id = R.drawable.sqbglg)
 
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
         Image(
-            painter = painterResource(id = R.drawable.squat_loginscreen),
+            painter = painterResource(id = R.drawable.sqbglg),
             contentDescription = null,
             contentScale = ContentScale.Crop,
             modifier = Modifier
