@@ -53,6 +53,9 @@ fun LibraryScreen(navController: NavHostController) {
     var showPlaylistDialog by remember { mutableStateOf(false) }
     var showAddDialog by remember { mutableStateOf(false) }
     var showSearchDialog by remember { mutableStateOf(false) }
+    var displayedPlaylists by remember { mutableStateOf<List<Pair<String, String>>>(emptyList()) }
+    var pendingQuery by remember { mutableStateOf<String?>(null) }
+    var searchQuery by remember { mutableStateOf<String?>(null) }
 
 
     val localRefreshPlaylists = {
@@ -90,8 +93,8 @@ fun LibraryScreen(navController: NavHostController) {
     LaunchedEffect(Unit) {
         firestoreRepository.fetchPlaylistSummaries(userId = selectedUserId!!) { summaries ->
             playlists.value = summaries
+            displayedPlaylists = summaries
         }
-
     }
 
     Box(
@@ -155,7 +158,7 @@ fun LibraryScreen(navController: NavHostController) {
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    SearchPlaylistsButton(onSearch = { showSearchDialog = true })
+                    SearchPlaylistsButton(onClick = { showSearchDialog = true })
                     PlusButtonWithMenu(
                         menuOptions = listOf(
                             MenuOption("Add Playlist") { showAddDialog = true }
@@ -171,7 +174,7 @@ fun LibraryScreen(navController: NavHostController) {
 
             // LAZY COLUMN is our whole scrolling feature, this allows us to scroll when the list gets too big for the screen
             LazyColumn {
-                items(playlists.value) { (id, name) ->
+                items(displayedPlaylists) { (id, name) ->
                     // We replaced the single Button with a Row that includes clickable text and a "..." dropdown
                     Row(
                         modifier = Modifier
@@ -325,12 +328,25 @@ fun LibraryScreen(navController: NavHostController) {
 
         if (showSearchDialog) {
             SearchPlaylistsDialog(
-                onDismiss = { showSearchDialog = false },
+                onDismiss = {
+                    showSearchDialog = false
+                },
                 onConfirm = { query ->
-                    // TODO: send `query` into your search/filter logic
+                    searchQuery = query
                     showSearchDialog = false
                 }
             )
         }
+
+        LaunchedEffect(searchQuery) {
+            if (searchQuery.isNullOrBlank()) {
+                displayedPlaylists = playlists.value
+            } else {
+                displayedPlaylists = playlists.value.filter {
+                    it.second.contains(searchQuery ?: "", ignoreCase = true)
+                }
+            }
+        }
+
     }
 }

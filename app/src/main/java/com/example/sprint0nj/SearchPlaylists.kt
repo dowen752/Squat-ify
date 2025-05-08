@@ -25,20 +25,19 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.Column
 
 @Composable
-fun SearchPlaylistsButton(
-    onSearch: (String) -> Unit
-) {
-    var showDialog by remember { mutableStateOf(false) }
-
+fun SearchPlaylistsButton(onClick: () -> Unit) {
     Box(
         modifier = Modifier.wrapContentSize(Alignment.TopEnd)
     ) {
         Button(
-            onClick = { showDialog = true },
+            onClick = onClick,
             modifier = Modifier.size(56.dp),
-            shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
+            shape = RoundedCornerShape(12.dp),
             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surface),
             contentPadding = PaddingValues(0.dp)
         ) {
@@ -54,18 +53,7 @@ fun SearchPlaylistsButton(
             }
         }
     }
-
-    if (showDialog) {
-        SearchPlaylistsDialog(
-            onDismiss = { showDialog = false },
-            onConfirm = { query ->
-                onSearch(query)
-                showDialog = false
-            }
-        )
-    }
 }
-
 
 // Window that lets the user type in a playlist name to search for
 
@@ -81,19 +69,27 @@ fun SearchPlaylistsDialog(
         onDismissRequest = onDismiss,
         title = { Text("Search Playlists") },
         text = {
-            OutlinedTextField(
-                value = searchQuery,
-                onValueChange = { searchQuery = it },
-                modifier = Modifier.fillMaxWidth(),
-                label = { Text("Playlist name") },
-                singleLine = true,
-                keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Search),
-                keyboardActions = KeyboardActions(onSearch = { onConfirm(searchQuery) }),
-                colors = TextFieldDefaults.outlinedTextFieldColors(
-                    focusedBorderColor = MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+            Column {
+                OutlinedTextField(
+                    value = searchQuery,
+                    onValueChange = { searchQuery = it },
+                    modifier = Modifier.fillMaxWidth(),
+                    label = { Text("Playlist name") },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Search),
+                    keyboardActions = KeyboardActions(onSearch = { onConfirm(searchQuery) }),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+                    )
                 )
-            )
+                TextButton(onClick = {
+                    searchQuery = ""
+                    onConfirm(searchQuery)
+                }) {
+                    Text("Clear")
+                }
+            }
         },
         confirmButton = {
             TextButton(onClick = { onConfirm(searchQuery) }) {
