@@ -167,7 +167,7 @@ fun FriendsScreen(navController: NavController) {
                 confirmButton = {
                     Button(onClick = {
                         // just toast for now. Later swap in Firestore
-                        Toast.makeText(context, "Adding $newFriendName…", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "Adding $newFriendName", Toast.LENGTH_SHORT).show()
                         friends.value = friends.value + newFriendName
                         newFriendName = ""
                         showAddFriendDialog = false

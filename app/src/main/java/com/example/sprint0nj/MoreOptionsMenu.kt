@@ -22,7 +22,6 @@ import androidx.compose.ui.unit.dp
 
 /*
  * This is a separate composable for the "..." button, so you can import it wherever needed.
- * "Toast" is an Android API used to display short confirmation messages after clicking the buttons.
  */
 @Composable
 fun MoreOptionsMenu(
