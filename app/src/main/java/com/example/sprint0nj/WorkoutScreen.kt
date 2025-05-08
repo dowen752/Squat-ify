@@ -124,6 +124,7 @@ fun WorkoutScreen(navController: NavController, playlistId: String) {
             Text(
                 text = playlist.value?.name ?: "Unnamed Playlist",
                 fontSize = 32.sp,
+                fontWeight = FontWeight.Bold,
                 color = Color.White,
                 modifier = Modifier
                     .align(Alignment.Start)
@@ -174,7 +175,7 @@ fun WorkoutScreen(navController: NavController, playlistId: String) {
                     }",
                     color = Color.White,
                     fontSize = 20.sp,
-                    fontWeight = FontWeight.Medium,
+                    fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(start = 12.dp)
 
                 )
@@ -209,12 +210,6 @@ fun WorkoutScreen(navController: NavController, playlistId: String) {
                         workoutToEdit = null
                     },
                     onConfirm = { workoutEntry ->
-                        // Here you update your UI, and later add Firebase logic.
-                        Toast.makeText(
-                            context,
-                            "Workout updated: ${workoutEntry.name} with ${workoutEntry.reps} reps and ${workoutEntry.sets} sets",
-                            Toast.LENGTH_SHORT
-                        ).show()
                         showWorkoutSelectionDialog = false
                         workoutToEdit = null
                     }
@@ -263,20 +258,22 @@ fun WorkoutScreen(navController: NavController, playlistId: String) {
                         Column(
                             modifier = Modifier
                                 .weight(1f, fill = false)
-                                .padding(start = 16.dp)
+                                .padding(start = 4.dp)
                         ) {
-                            Text(text = workout.title, fontSize = 16.sp, color = Color.White)
+                            Text(text = workout.title, fontSize = 16.sp, color = Color.White, fontWeight = FontWeight.Bold)
                             Spacer(modifier = Modifier.height(4.dp))
                             Row {
                                 Text(
                                     text = "# Reps: ${workout.reps ?: "-"}",
                                     fontSize = 14.sp,
+                                    fontWeight = FontWeight.Bold,
                                     color = Color.White
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
                                     text = "# Sets: ${workout.sets ?: "-"}",
                                     fontSize = 14.sp,
+                                    fontWeight = FontWeight.Bold,
                                     color = Color.White
                                 )
                             }
@@ -290,11 +287,6 @@ fun WorkoutScreen(navController: NavController, playlistId: String) {
                                     workoutId = workout.id,
                                     onSuccess = {
                                         localFetchPlaylist()
-                                        Toast.makeText(
-                                            context,
-                                            "Removed: ${workout.title}",
-                                            Toast.LENGTH_SHORT
-                                        ).show()
                                     }
                                 )
                             },

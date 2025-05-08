@@ -25,9 +25,11 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import com.example.sprint0nj.MoreOptionsMenu
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
+import com.example.sprint0nj.SearchPlaylistsButton
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -51,15 +53,20 @@ fun LibraryScreen(navController: NavHostController) {
     val displayName = currentUser?.displayName ?: currentUser?.email ?: "Unknown User"
     var showPlaylistDialog by remember { mutableStateOf(false) }
     var showAddDialog by remember { mutableStateOf(false) }
+    var showSearchDialog by remember { mutableStateOf(false) }
+    var displayedPlaylists by remember { mutableStateOf<List<Pair<String, String>>>(emptyList()) }
+    var pendingQuery by remember { mutableStateOf<String?>(null) }
+    var searchQuery by remember { mutableStateOf<String?>(null) }
 
 
     val localRefreshPlaylists = {
         if (selectedUserId != null) {
             scope.launch {
-                val updated = firestoreRepository.fetchPlaylistSummaries(
-                    selectedUserId,
+                firestoreRepository.fetchPlaylistSummaries(
+                    userId = selectedUserId,
                     onResult = { updated ->
                         playlists.value = updated
+                        displayedPlaylists = updated
                     }
                 )
             }
@@ -88,8 +95,8 @@ fun LibraryScreen(navController: NavHostController) {
     LaunchedEffect(Unit) {
         firestoreRepository.fetchPlaylistSummaries(userId = selectedUserId!!) { summaries ->
             playlists.value = summaries
+            displayedPlaylists = summaries
         }
-
     }
 
     Box(
@@ -105,11 +112,12 @@ fun LibraryScreen(navController: NavHostController) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                // changes user icon and username position
+                .padding(start = 4.dp, end = 16.dp, top = 48.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Image(
-                painter = painterResource(id = R.drawable.user_icon),
+                painter = painterResource(id = R.drawable.user2),
                 contentDescription = "User Icon",
                 modifier = Modifier
                     .size(64.dp)
@@ -121,8 +129,9 @@ fun LibraryScreen(navController: NavHostController) {
             Text(
                 text = displayName,
                 color = Color.White,
-                fontSize = 20.sp, // increased from 16.sp to 20.sp
-                style = MaterialTheme.typography.bodyLarge
+                fontSize = 20.sp,
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Bold
             )
         }
 
@@ -133,37 +142,7 @@ fun LibraryScreen(navController: NavHostController) {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
-           /* Original Spacing for playlists and plus button
-            Spacer(modifier = Modifier.height(80.dp))
-
-
-            Text(
-                text = "My Playlists",
-                fontSize = 28.sp,
-                color = Color.White,
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
-
-            Box(
-                Modifier.fillMaxWidth(),
-                contentAlignment = Alignment.TopEnd
-            ) {
-                PlusButtonWithMenu(
-                    menuOptions = listOf(
-                        MenuOption("Add Playlist") {
-                            // directly pop up the dialog
-                            showAddDialog = true
-                        }
-                    ),
-                    onPlaylistAdded = { localRefreshPlaylists() }
-                )
-            }
-
-
-            Spacer(modifier = Modifier.height(16.dp))*/
-
-            // New spacing so "My Playlists" is left aligned
-            Spacer(modifier = Modifier.height(80.dp))
+            Spacer(modifier = Modifier.height(100.dp))
 
             Row(
                 modifier = Modifier
@@ -175,21 +154,32 @@ fun LibraryScreen(navController: NavHostController) {
                 Text(
                     text = "My Playlists",
                     fontSize = 28.sp,
+                    fontWeight = FontWeight.Bold,
                     color = Color.White
                 )
-                PlusButtonWithMenu(
-                    menuOptions = listOf(
-                        MenuOption("Add Playlist") { showAddDialog = true }
-                    ),
-                    onPlaylistAdded = { localRefreshPlaylists() }
-                )
+                // for grouping the two icons together
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    SearchPlaylistsButton(onClick = { showSearchDialog = true })
+                    PlusButtonWithMenu(
+                        menuOptions = listOf(
+                            MenuOption("Add Playlist") { showAddDialog = true }
+                        ),
+                        onPlaylistAdded = { localRefreshPlaylists() }
+                    )
+                }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            // Space between "My Playlists" and list of actual playlists
+
+            //Spacer(modifier = Modifier.height(2.dp))
+            Spacer(modifier = Modifier.height(50.dp))
 
             // LAZY COLUMN is our whole scrolling feature, this allows us to scroll when the list gets too big for the screen
             LazyColumn {
-                items(playlists.value) { (id, name) ->
+                items(displayedPlaylists) { (id, name) ->
                     // We replaced the single Button with a Row that includes clickable text and a "..." dropdown
                     Row(
                         modifier = Modifier
@@ -204,12 +194,12 @@ fun LibraryScreen(navController: NavHostController) {
                         // Clicking the text navigates to the WorkoutScreen
                         Text(
                             text = name,
-                            fontSize = 16.sp,
+                            fontSize = 20.sp, // increased from 16.sp
+                            fontWeight = FontWeight.Bold, // makes text bold
                             color = Color.White,
                             modifier = Modifier
                                 .weight(1f)
                                 .clickable {
-                                    // Navigate to the WorkoutScreen route
                                     navController.navigate("workout/$id")
                                 }
                         )
@@ -224,26 +214,12 @@ fun LibraryScreen(navController: NavHostController) {
                                 showShareDialog = true
                             },
 
-                            // Previous code:
-                            /* onShare = { // destUsername will be replaced with user input once we have pop up
-                            firestoreRepository.sharePlaylist(destUsername = "That's Gonna Leave A Marc",
-                                playlistId = id,
-                                onSuccess = {
-                                    Toast.makeText(context, "Shared playlist: $name", Toast.LENGTH_SHORT).show()
-                                }
-                                )
-                        },*/
                             onRemove = {
                                 firestoreRepository.removePlaylist(
                                     userId = selectedUserId!!,
                                     playlistId = id,
                                     onSuccess = {
                                         localRefreshPlaylists()
-                                        Toast.makeText(
-                                            context,
-                                            "Remove clicked for playlist: $name",
-                                            Toast.LENGTH_SHORT
-                                        ).show()
                                     }
                                 )
                             },
@@ -263,8 +239,6 @@ fun LibraryScreen(navController: NavHostController) {
             PlaylistNameDialog(
                 onDismiss = { showAddDialog = false },
                 onConfirm = { newName ->
-                    // [Firebase placeholder] firestoreRepository.postPlaylist(...)
-                    Toast.makeText(context, "Playlist added: $newName", Toast.LENGTH_SHORT).show()
                     localRefreshPlaylists()
                     showAddDialog = false
                 },
@@ -326,19 +300,46 @@ fun LibraryScreen(navController: NavHostController) {
                     playlistToRename = null
                 },
                 onConfirm = { newName ->
-                    // [Firebase Placeholder]
-                    // For now, just showing Toast message (can delete or keep)
-                    Toast.makeText(
-                        context,
-                        "Playlist renamed to: $newName",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                    // Reset state and refresh playlists
+                    val playlistId = playlistToRename!!.first
+                    firestoreRepository.renamePlaylist(
+                        selectedUserId!!,
+                        playlistId,
+                        newName,
+                        onSuccess = {
+                            localRefreshPlaylists()
+                        },
+                        onFailure = {
+                            Toast.makeText(context, "Failed to rename playlist.", Toast.LENGTH_SHORT).show()
+                        }
+                    )
+                    // Reset state
                     showRenameDialog = false
                     playlistToRename = null
-                    localRefreshPlaylists()
                 }
             )
         }
+
+        if (showSearchDialog) {
+            SearchPlaylistsDialog(
+                onDismiss = {
+                    showSearchDialog = false
+                },
+                onConfirm = { query ->
+                    searchQuery = query
+                    showSearchDialog = false
+                }
+            )
+        }
+
+        LaunchedEffect(searchQuery) {
+            if (searchQuery.isNullOrBlank()) {
+                displayedPlaylists = playlists.value
+            } else {
+                displayedPlaylists = playlists.value.filter {
+                    it.second.contains(searchQuery ?: "", ignoreCase = true)
+                }
+            }
+        }
+
     }
 }

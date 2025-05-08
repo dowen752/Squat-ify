@@ -19,14 +19,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.*
-
 import androidx.compose.ui.text.input.TextFieldValue
 import android.widget.Toast
-
 import androidx.compose.ui.platform.LocalContext
 import com.example.sprint0nj.data.Classes.Playlist
 import com.example.sprint0nj.data.Classes.Workout
@@ -34,6 +31,12 @@ import com.example.sprint0nj.data.FirestoreRepository
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
 import java.util.UUID
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextFieldDefaults
+//import androidx.compose.material3.TextButtonDefaults
+import androidx.compose.material3.MaterialTheme
+
 
 
 // Data class representing a single menu option
@@ -43,6 +46,7 @@ data class MenuOption(
     val onClick: () -> Unit  // The action executed when the option is selected
 )
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PlaylistNameDialog(
     onDismiss: () -> Unit,      // Called to dismiss the dialog
@@ -55,21 +59,25 @@ fun PlaylistNameDialog(
     var selectedUserId = FirebaseAuth.getInstance().currentUser?.uid
 
     AlertDialog(
-        onDismissRequest = { onDismiss() },
+        onDismissRequest = onDismiss,
         title = { Text("Playlist Name:") },
         text = {
             // BasicTextField to allow the user to type in the playlist name
-            BasicTextField(
+            OutlinedTextField(
                 value = playlistName,
                 onValueChange = { playlistName = it },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(8.dp)
+                modifier = Modifier.fillMaxWidth(),
+                label = { Text("Playlist Name") },
+                singleLine = true,
+                colors = TextFieldDefaults.outlinedTextFieldColors(
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+                )
             )
         },
         confirmButton = {
             // Confirm button returns the entered playlist name
-            Button(
+            TextButton(
                 onClick = {
                     val playlist = Playlist(
                         id = UUID.randomUUID().toString(),
@@ -80,29 +88,29 @@ fun PlaylistNameDialog(
                         userId = selectedUserId!!,
                         onSuccess = {
                             val name = playlist.name
-                            Toast.makeText(context, "Added playlist: $name", Toast.LENGTH_SHORT).show()
                             onPlaylistAdded()
                         }
                     )
 
-                    onConfirm(playlistName.text) // Pass the input to the onConfirm callback
-                    onDismiss() // Close the dialog after confirming
+                    onConfirm(playlistName.text)
+                    onDismiss()
                 },
-
-                colors = ButtonDefaults.buttonColors(containerColor = Color.Black),
-                // Can also modify the shape, padding, etc.
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.Transparent,
+                    contentColor   = MaterialTheme.colorScheme.primary
+                )
             ) {
-                // Customize the text style here (font size, color, etc.)
                 Text("Confirm")
             }
         },
         dismissButton = {
             // Cancel Button: Customize its UI similarly to the Confirm Button
-            Button(
-                onClick = { onDismiss() },
-                // For changing the Cancel button's appearance
-                colors = ButtonDefaults.buttonColors(containerColor = Color.Black),
-                // Can add any padding or shape modifications here.
+            TextButton(
+                onClick = onDismiss,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.Transparent,
+                    contentColor   = MaterialTheme.colorScheme.primary
+                )
             ) {
                 Text("Cancel")
             }

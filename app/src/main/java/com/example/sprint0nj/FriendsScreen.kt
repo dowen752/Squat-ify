@@ -23,6 +23,10 @@ import com.google.firebase.auth.FirebaseAuth
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
+import androidx.compose.ui.text.font.FontWeight
+import com.example.sprint0nj.data.FirestoreRepository
+import com.google.firebase.firestore.FieldValue
+import com.google.firebase.firestore.FirebaseFirestore
 
 // PlusButtonWithMenu and MenuOption
 import com.example.sprint0nj.PlusButtonWithMenu
@@ -33,14 +37,17 @@ fun FriendsScreen(navController: NavController) {
     val currentUser = FirebaseAuth.getInstance().currentUser
     val displayName = currentUser?.displayName ?: currentUser?.email ?: "Unknown User"
     val context = LocalContext.current
+    val firestoreRepository = remember { FirestoreRepository() }
+    val currentUserId = FirebaseAuth.getInstance().currentUser?.uid
+    val friends = remember { mutableStateOf<List<String>>(emptyList()) }
 
     // Replace with real Firestore data later
-    val friends = remember {
-        mutableStateOf(
-            listOf(
-                "Marc Martinez", "Emily K.", "testUser2", "StrongSteve", "LegDayLori"
-            )
-        )
+    LaunchedEffect(currentUserId) {
+        currentUserId?.let {
+            firestoreRepository.fetchFriendsList(it) { fetched ->
+                friends.value = fetched
+            }
+        }
     }
 
     // New state for showing the “add friend” dialog and capturing the entry
@@ -73,6 +80,7 @@ fun FriendsScreen(navController: NavController) {
                 Text(
                     text = "My Friends",
                     fontSize = 28.sp,
+                    fontWeight = FontWeight.Bold,
                     color = Color.White,
                     modifier = Modifier.padding(bottom = 16.dp)
                 )
@@ -107,19 +115,22 @@ fun FriendsScreen(navController: NavController) {
                             text = friend,
                             fontSize = 20.sp,
                             color = Color.White,
+                            fontWeight = FontWeight.Bold,
                             modifier = Modifier.weight(1f)
                         )
                         Button(
                             onClick = {
-                                Toast.makeText(
-                                    context,
-                                    "Viewing ${friend}'s workouts",
-                                    Toast.LENGTH_SHORT
-                                ).show()
+                                if (currentUserId != null) {
+                                    firestoreRepository.removeFriend(currentUserId, friend) {
+                                        firestoreRepository.fetchFriendsList(currentUserId) { updatedList ->
+                                            friends.value = updatedList
+                                        }
+                                    }
+                                }
                             },
                             colors = ButtonDefaults.buttonColors(containerColor = Color.DarkGray)
                         ) {
-                            Text("View", color = Color.White)
+                            Text("Remove", color = Color.White)
                         }
                     }
                 }
@@ -144,7 +155,8 @@ fun FriendsScreen(navController: NavController) {
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF212121))
 
             ) {
-                Text("Logout", color = Color.White)
+                Text("Log out", color = Color.White, fontWeight = FontWeight.Bold)
+
             }
         }
     }
@@ -166,15 +178,25 @@ fun FriendsScreen(navController: NavController) {
                 },
                 confirmButton = {
                     Button(onClick = {
-                        // just toast for now. Later swap in Firestore
-                        Toast.makeText(context, "Adding $newFriendName…", Toast.LENGTH_SHORT).show()
-                        friends.value = friends.value + newFriendName
+
+                        if (currentUserId != null) {
+                            val userRef = FirebaseFirestore.getInstance().collection("users").document(currentUserId)
+                            userRef.update("userFriends", FieldValue.arrayUnion(newFriendName))
+                                .addOnSuccessListener {
+                                    firestoreRepository.fetchFriendsList(currentUserId) { updatedList ->
+                                        friends.value = updatedList
+                                    }
+                                }
+                                .addOnFailureListener {
+                                    Toast.makeText(context, "Failed to add friend", Toast.LENGTH_SHORT).show()
+                                }
+                        }
+
                         newFriendName = ""
                         showAddFriendDialog = false
                     },
-                        colors = ButtonDefaults.buttonColors(containerColor = Color.Black)
-                    ) {
-                        Text("Confirm", color = Color.White)
+                        colors = ButtonDefaults.buttonColors(containerColor = Color.Black)) {
+                        Text("Confirm", color = Color.White, fontWeight = FontWeight.Bold)
                     }
                 },
                 dismissButton = {
