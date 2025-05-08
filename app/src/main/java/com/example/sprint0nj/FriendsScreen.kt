@@ -179,6 +179,7 @@ fun FriendsScreen(navController: NavController) {
                 },
                 confirmButton = {
                     Button(onClick = {
+
                         if (currentUserId != null) {
                             val userRef = FirebaseFirestore.getInstance().collection("users").document(currentUserId)
                             userRef.update("userFriends", FieldValue.arrayUnion(newFriendName))
@@ -191,6 +192,7 @@ fun FriendsScreen(navController: NavController) {
                                     Toast.makeText(context, "Failed to add friend", Toast.LENGTH_SHORT).show()
                                 }
                         }
+
                         newFriendName = ""
                         showAddFriendDialog = false
                     },
